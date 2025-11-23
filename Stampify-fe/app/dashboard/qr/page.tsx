@@ -22,13 +22,26 @@ export default function QRCodePage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("")
 
   useEffect(() => {
+    console.log('QR Page useEffect triggered')
+    console.log('_hasHydrated:', _hasHydrated)
+    console.log('isAuthenticated:', isAuthenticated)
+    console.log('user:', user)
+
     // Wait for hydration before checking auth
-    if (!_hasHydrated) return
+    if (!_hasHydrated) {
+      console.log('Waiting for hydration...')
+      return
+    }
+
+    console.log('Hydration complete, checking auth...')
 
     if (!isAuthenticated || user?.role !== "business") {
+      console.log('Not authenticated or not a business user, redirecting to login')
       router.push("/login")
       return
     }
+
+    console.log('Auth check passed, loading QR code...')
 
     const loadQR = async () => {
       try {

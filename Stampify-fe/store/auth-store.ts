@@ -25,8 +25,13 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "stampify-auth",
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true)
+      onRehydrateStorage: () => {
+        console.log('Auth store: Starting rehydration')
+        return (state) => {
+          console.log('Auth store: Rehydration complete', state)
+          state?.setHasHydrated(true)
+          console.log('Auth store: _hasHydrated set to true')
+        }
       },
     },
   ),
