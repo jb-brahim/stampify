@@ -13,6 +13,9 @@ connectDB();
 // Initialize Express app
 const app = express();
 
+// Trust proxy (required for Render/Heroku/etc deployment)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors()); // Enable CORS for frontend
 app.use(express.json()); // Parse JSON bodies
