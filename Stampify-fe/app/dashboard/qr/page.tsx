@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 
 export default function QRCodePage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore()
   const { stampCard, setStampCard } = useBusinessStore()
   const { toast } = useToast()
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -22,6 +22,9 @@ export default function QRCodePage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("")
 
   useEffect(() => {
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) return
+
     if (!isAuthenticated || user?.role !== "business") {
       router.push("/login")
       return
@@ -62,7 +65,7 @@ export default function QRCodePage() {
     }
 
     loadQR()
-  }, [isAuthenticated, user, router, setStampCard, toast])
+  }, [_hasHydrated, isAuthenticated, user, router, setStampCard, toast])
 
   const handleDownload = () => {
     if (qrDataUrl) {
@@ -87,7 +90,7 @@ export default function QRCodePage() {
     })
   }
 
-  if (isLoading) {
+  if (isLoading || !_hasHydrated) {
     return (
       <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

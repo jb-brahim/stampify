@@ -17,7 +17,7 @@ import { StampCard } from "@/components/stamp-card"
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore()
   const { stampCard, setStampCard, updateCardSettings } = useBusinessStore()
   const { toast } = useToast()
 
@@ -27,6 +27,9 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) return
+
     if (!isAuthenticated || user?.role !== "business") {
       router.push("/login")
       return
@@ -46,7 +49,7 @@ export default function SettingsPage() {
     }
 
     loadCard()
-  }, [isAuthenticated, user, router, setStampCard])
+  }, [_hasHydrated, isAuthenticated, user, router, setStampCard])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,7 +74,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || !_hasHydrated) {
     return (
       <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

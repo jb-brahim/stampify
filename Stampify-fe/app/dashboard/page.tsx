@@ -37,11 +37,14 @@ function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: nu
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore()
   const { stats, setStats } = useBusinessStore()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) return
+
     if (!isAuthenticated || user?.role !== "business") {
       router.push("/login")
       return
@@ -66,9 +69,9 @@ export default function DashboardPage() {
     }
 
     loadStats()
-  }, [isAuthenticated, user, router, setStats])
+  }, [_hasHydrated, isAuthenticated, user, router, setStats])
 
-  if (isLoading) {
+  if (isLoading || !_hasHydrated) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Skeleton className="mb-8 h-10 w-64" />
