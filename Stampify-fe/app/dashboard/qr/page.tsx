@@ -33,8 +33,15 @@ export default function QRCodePage() {
     const loadQR = async () => {
       try {
         const response = await businessAPI.getCard()
+        console.log('Full response:', response)
+        console.log('response.data:', response.data)
+
         const data = response.data.data
+        console.log('Extracted data:', data)
+
         const qrToken = data.qrToken
+        console.log('QR Token:', qrToken)
+        console.log('Stamp Card:', data.stampCard)
 
         setStampCard({
           ...data.stampCard,
@@ -45,6 +52,7 @@ export default function QRCodePage() {
         // Generate QR code
         if (qrToken) {
           const scanUrl = `${window.location.origin}/scan/${qrToken}`
+          console.log('Scan URL:', scanUrl)
           const canvas = canvasRef.current
           if (canvas) {
             await QRCode.toCanvas(canvas, scanUrl, {
