@@ -1,0 +1,514 @@
+🔥 FRONTEND PROMPT - STAMPIFY
+
+Project Name: Stampify Frontend
+Backend API: http://localhost:5000 (configurable)
+Architecture: Single Page Application (SPA) with role-based routing
+
+═══════════════════════════════════════════════════════════════════════════
+
+📋 OVERVIEW
+
+Stampify is a digital QR-based stamp card system for small businesses. The 
+frontend needs to support three distinct user experiences:
+
+1. Business Owner Portal - Manage stamp cards, view QR codes, monitor customers
+2. Admin Dashboard - Manage all businesses, view statistics, control subscriptions
+3. Customer Mobile App/Web - Scan QR codes, view stamp card progress
+
+═══════════════════════════════════════════════════════════════════════════
+
+🛠️ RECOMMENDED TECH STACK
+
+- Framework: React.js with TypeScript OR Next.js
+- State Management: Redux Toolkit / Zustand / React Context
+- UI Library: Material-UI / Tailwind CSS + Shadcn/ui / Chakra UI
+- Routing: React Router v6
+- HTTP Client: Axios / Fetch API
+- Form Handling: React Hook Form + Zod validation
+- QR Code: qrcode.react or react-qr-code
+- Date Handling: date-fns or dayjs
+- Icons: React Icons / Lucide React
+- Toast Notifications: react-hot-toast / sonner
+- Charts (Admin Dashboard): Recharts / Chart.js
+
+═══════════════════════════════════════════════════════════════════════════
+
+👥 USER TYPES & FEATURES
+
+───────────────────────────────────────────────────────────────────────────
+1. BUSINESS OWNER PORTAL
+───────────────────────────────────────────────────────────────────────────
+
+Authentication:
+- Signup page (email, password, businessName)
+- Login page (email, password)
+- Password validation (min 6 characters)
+- Email format validation
+- JWT token storage (localStorage/sessionStorage)
+- Auto-logout on token expiration (7 days)
+- Protected routes middleware
+
+Dashboard Features:
+- Display business name and email
+- Current stamp card settings (totalStamps, rewardText)
+- QR code display (download/print option)
+- Quick stats:
+  * Total customers
+  * Total stamps given
+  * Customers with completed cards
+
+Stamp Card Management:
+- Edit total stamps (min: 1)
+- Edit reward text (max 200 characters)
+- Save changes button
+- Success/error notifications
+- Loading states
+
+QR Code Display:
+- Show QR code image (base64 from API)
+- Display QR token (for sharing/testing)
+- Download QR as PNG
+- Print QR code option
+- Instructions for customers
+
+Customer View:
+- List of all customers (optional feature)
+- Customer stamp counts
+- Reward achievement status
+
+───────────────────────────────────────────────────────────────────────────
+2. ADMIN DASHBOARD
+───────────────────────────────────────────────────────────────────────────
+
+Authentication:
+- Admin login page (email: brahim@stampify.com, password: stampifyadmin*)
+- JWT token storage
+- Auto-logout on token expiration (24 hours)
+- Separate authentication from business owner
+
+Dashboard Overview:
+- Total businesses count
+- Total customers count
+- Active vs suspended businesses
+- Total stamps given (across all businesses)
+- Average stamps per customer
+- Top 10 businesses by activity (chart)
+
+Business Management:
+- Table/List of all businesses with:
+  * Business name
+  * Email
+  * Customer count
+  * Subscription status (badge: Active/Suspended)
+  * Subscription expiry date
+  * Created date
+  * Actions (View Customers, Edit Subscription)
+
+Business Details:
+- View business information
+- List all customers for a business:
+  * Device ID
+  * Current stamps
+  * Reward achieved status
+  * Last stamp time
+  * Created date
+
+Subscription Management:
+- Toggle subscription status (Active/Suspended)
+- Set subscription expiry date
+- Date picker component
+- Confirmation dialog before suspending
+- Success notifications
+
+Statistics Page:
+- Overview cards with metrics
+- Charts:
+  * Businesses by subscription status (pie chart)
+  * Top businesses by customer count (bar chart)
+  * Total stamps given over time (line chart)
+- Export data option (optional)
+
+───────────────────────────────────────────────────────────────────────────
+3. CUSTOMER MOBILE/WEB APP
+───────────────────────────────────────────────────────────────────────────
+
+QR Code Scanner:
+- Camera access for QR scanning
+- Manual QR code entry option
+- Scan QR code functionality
+- Device ID generation (stored in localStorage)
+- Success/error messages
+- Rate limit handling (10 seconds between scans)
+
+My Stamp Cards:
+- List of all stamp cards (by business)
+- Visual stamp card display:
+  * Business name
+  * Progress bar/circles showing stamps
+  * Stamps earned / Total stamps required
+  * Reward text
+  * Status: In Progress / Completed
+- Tap to view details
+
+Card Details View:
+- Business name and info
+- Visual stamp card (filled vs empty stamps)
+- Progress percentage
+- Reward text
+- "Scan to Add Stamp" button
+- Share card option
+
+Notifications:
+- Stamp added successfully
+- Card completed (reward achieved)
+- Rate limit warning
+- Business subscription suspended message
+
+═══════════════════════════════════════════════════════════════════════════
+
+📡 API INTEGRATION
+
+Base URL: http://localhost:5000 (make configurable via .env)
+
+API Client Setup:
+- Axios instance with baseURL
+- Request interceptor: Add Authorization header with JWT token
+- Response interceptor: Handle 401 errors (auto-logout)
+- Error handling wrapper
+
+Endpoints to Implement:
+
+BUSINESS OWNER ENDPOINTS:
+- POST /api/auth/signup
+- POST /api/auth/login
+- GET /api/card/my (protected)
+- PUT /api/card/update (protected)
+- GET /api/qr/my (protected)
+
+ADMIN ENDPOINTS:
+- POST /api/admin/login
+- GET /api/admin/businesses (protected)
+- GET /api/admin/businesses/:businessId/customers (protected)
+- PATCH /api/admin/businesses/:businessId/subscription (protected)
+- GET /api/admin/stats (protected)
+
+CUSTOMER ENDPOINTS:
+- POST /api/scan/:qrToken (public)
+- GET /api/customer/:customerId (public)
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎨 UI/UX REQUIREMENTS
+
+Design System:
+- Modern, clean, professional design
+- Consistent color scheme
+- Accessible (WCAG 2.1 AA compliance)
+- Mobile-first responsive design
+
+Color Suggestions:
+- Primary: Blue/Purple (#6366f1, #8b5cf6)
+- Success: Green (#10b981)
+- Warning: Orange (#f59e0b)
+- Error: Red (#ef4444)
+- Suspended: Gray (#6b7280)
+
+Typography:
+- Clear hierarchy (h1, h2, h3)
+- Readable font sizes
+- Sans-serif font family
+
+Components Needed:
+- Button (primary, secondary, danger variants)
+- Input fields (text, email, password, number)
+- Card component
+- Modal/Dialog
+- Toast notifications
+- Loading spinner/skeleton
+- Badge/Status indicator
+- Table/Data grid
+- Charts (for admin dashboard)
+- QR Code display
+- Camera scanner component
+- Progress bar
+- Stamp card visual component
+
+Pages Structure:
+
+BUSINESS OWNER:
+- /login - Login page
+- /signup - Signup page
+- /dashboard - Main dashboard
+- /stamp-card - Manage stamp card settings
+- /qr-code - Display QR code
+- /customers - View customers (optional)
+
+ADMIN:
+- /admin/login - Admin login
+- /admin/dashboard - Overview with stats
+- /admin/businesses - List all businesses
+- /admin/businesses/:id - Business details
+- /admin/businesses/:id/customers - Business customers
+- /admin/stats - Detailed statistics
+
+CUSTOMER:
+- /scan - QR scanner page
+- /cards - My stamp cards list
+- /cards/:customerId - Card details view
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔐 AUTHENTICATION FLOW
+
+Business Owner:
+1. User signs up or logs in
+2. Backend returns JWT token + user data
+3. Store token in localStorage/sessionStorage
+4. Store user data in state/context
+5. Redirect to dashboard
+6. Include token in all protected API calls
+7. Auto-logout on 401 response or token expiration
+
+Admin:
+1. Admin logs in via /admin/login
+2. Backend returns JWT token with role: "admin"
+3. Store admin token separately (different key)
+4. Store admin data in state/context
+5. Redirect to admin dashboard
+6. Include admin token in all admin API calls
+7. Auto-logout on 401 or after 24 hours
+
+Token Management:
+- Check token expiration before API calls
+- Refresh token logic (if implemented)
+- Clear tokens on logout
+- Redirect to login if no token on protected routes
+
+═══════════════════════════════════════════════════════════════════════════
+
+📱 RESPONSIVE DESIGN
+
+Breakpoints:
+- Mobile: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px
+
+Mobile Considerations:
+- Touch-friendly buttons (min 44x44px)
+- Swipeable cards
+- Bottom navigation for customer app
+- Hamburger menu for admin/business owner
+- Optimized QR scanner for mobile cameras
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎯 KEY FEATURES TO IMPLEMENT
+
+Business Owner:
+✅ Login/Signup forms with validation
+✅ Dashboard with business info
+✅ Stamp card settings editor
+✅ QR code display with download/print
+✅ Success/error notifications
+✅ Loading states
+✅ Responsive design
+
+Admin:
+✅ Admin login page
+✅ Dashboard with statistics cards
+✅ Businesses table with search/filter
+✅ Business details modal/page
+✅ Customer list per business
+✅ Subscription toggle with confirmation
+✅ Date picker for expiry
+✅ Charts and visualizations
+✅ Responsive admin panel
+
+Customer:
+✅ QR code scanner (camera or manual entry)
+✅ Device ID generation and storage
+✅ Stamp card visual display
+✅ Progress indicators
+✅ Card list view
+✅ Card detail view
+✅ Success animations when stamp added
+✅ Rate limit handling UI
+✅ Offline support (optional)
+
+═══════════════════════════════════════════════════════════════════════════
+
+🐛 ERROR HANDLING
+
+API Errors:
+- Network errors (no connection)
+- 401 Unauthorized (token expired/invalid)
+- 403 Forbidden (wrong role)
+- 404 Not Found
+- 429 Too Many Requests (rate limit)
+- 500 Server Error
+- Validation errors (400)
+
+User-Friendly Messages:
+- "Connection failed. Please check your internet."
+- "Your session has expired. Please login again."
+- "You don't have permission to access this page."
+- "Please wait 10 seconds before scanning again."
+- "Invalid email or password."
+- "Business subscription is suspended."
+
+═══════════════════════════════════════════════════════════════════════════
+
+📊 STATE MANAGEMENT
+
+Recommended Structure:
+
+Auth State:
+- user (business owner/admin)
+- token
+- isAuthenticated
+- loading
+- error
+
+Business Owner State:
+- businessInfo
+- stampCardSettings
+- qrCode
+- customers (optional)
+
+Admin State:
+- businesses
+- selectedBusiness
+- customers
+- statistics
+
+Customer State:
+- deviceId
+- myCards
+- currentCard
+- scanHistory
+
+═══════════════════════════════════════════════════════════════════════════
+
+🚀 PERFORMANCE OPTIMIZATIONS
+
+- Lazy loading for routes
+- Code splitting
+- Image optimization
+- Memoization for expensive calculations
+- Debounce for search inputs
+- Pagination for large lists
+- Virtual scrolling for long tables
+- Caching API responses (where appropriate)
+
+═══════════════════════════════════════════════════════════════════════════
+
+🧪 TESTING REQUIREMENTS
+
+- Unit tests for utilities
+- Component tests
+- Integration tests for API calls
+- E2E tests for critical flows:
+  * Business owner signup/login
+  * Admin login
+  * QR code scanning
+  * Subscription management
+
+═══════════════════════════════════════════════════════════════════════════
+
+📦 PROJECT STRUCTURE SUGGESTION
+
+stampify-frontend/
+├── src/
+│   ├── components/         # Reusable components
+│   │   ├── common/        # Button, Input, Card, etc.
+│   │   ├── business/      # Business owner components
+│   │   ├── admin/         # Admin components
+│   │   └── customer/      # Customer components
+│   ├── pages/             # Page components
+│   │   ├── business/      # Business owner pages
+│   │   ├── admin/         # Admin pages
+│   │   └── customer/      # Customer pages
+│   ├── services/          # API services
+│   │   ├── api.js        # Axios instance
+│   │   ├── auth.js       # Auth endpoints
+│   │   ├── business.js   # Business endpoints
+│   │   ├── admin.js      # Admin endpoints
+│   │   └── customer.js   # Customer endpoints
+│   ├── hooks/             # Custom React hooks
+│   ├── context/           # Context providers
+│   │   ├── AuthContext.js
+│   │   └── ThemeContext.js
+│   ├── utils/             # Helper functions
+│   ├── types/             # TypeScript types (if using TS)
+│   ├── constants/         # Constants
+│   ├── App.jsx            # Main App component
+│   └── main.jsx           # Entry point
+├── public/
+├── .env                   # Environment variables
+└── package.json
+
+═══════════════════════════════════════════════════════════════════════════
+
+🔧 ENVIRONMENT VARIABLES
+
+Required:
+- VITE_API_URL=http://localhost:5000 (or REACT_APP_API_URL for CRA)
+
+Optional:
+- VITE_APP_NAME=Stampify
+- VITE_ENABLE_DEV_TOOLS=true
+
+═══════════════════════════════════════════════════════════════════════════
+
+✅ ACCEPTANCE CRITERIA
+
+Business Owner:
+- Can signup and login
+- Can view and edit stamp card settings
+- Can view and download QR code
+- See loading states during API calls
+- Receive success/error notifications
+- Mobile responsive
+
+Admin:
+- Can login with admin credentials
+- Can view all businesses with statistics
+- Can view customers for each business
+- Can suspend/reactivate subscriptions
+- Can view dashboard statistics with charts
+- Mobile responsive
+
+Customer:
+- Can scan QR codes (camera or manual)
+- Can view stamp card progress visually
+- See success feedback when stamp added
+- Handle rate limiting gracefully
+- Mobile optimized
+
+═══════════════════════════════════════════════════════════════════════════
+
+📝 ADDITIONAL NOTES
+
+- Backend API uses CORS - frontend origin must be whitelisted
+- QR codes are returned as base64 strings - decode for display
+- Device IDs should be persistent (localStorage) for customers
+- Admin tokens expire in 24h, business owner tokens in 7 days
+- Rate limit: 1 scan per 10 seconds per customer
+- Subscription status affects QR scanning (suspended = blocked)
+
+═══════════════════════════════════════════════════════════════════════════
+
+🎨 UI/UX INSPIRATION SUGGESTIONS
+
+- Clean, modern interface (like Stripe dashboard)
+- Intuitive navigation
+- Clear call-to-action buttons
+- Visual feedback for all actions
+- Accessible color contrasts
+- Smooth animations/transitions
+- Professional business appearance
+
+═══════════════════════════════════════════════════════════════════════════
+
+END OF PROMPT
+
