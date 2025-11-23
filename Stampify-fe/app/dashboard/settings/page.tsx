@@ -38,9 +38,14 @@ export default function SettingsPage() {
     const loadCard = async () => {
       try {
         const response = await businessAPI.getCard()
-        setStampCard(response.data)
-        setTotalStamps(response.data.totalStamps || 10)
-        setRewardText(response.data.rewardText || "")
+        const data = response.data.data
+        setStampCard({
+          ...data.stampCard,
+          qrToken: data.qrToken,
+          businessName: data.businessName
+        })
+        setTotalStamps(data.stampCard.totalStamps || 10)
+        setRewardText(data.stampCard.rewardText || "")
       } catch (error) {
         console.error("Failed to load card:", error)
       } finally {

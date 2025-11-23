@@ -32,25 +32,32 @@ export default function QRCodePage() {
 
     const loadQR = async () => {
       try {
-        const response = await businessAPI.getQR()
-        const qrToken = response.data.qrToken
+        const response = await businessAPI.getCard()
+        const data = response.data.data
+        const qrToken = data.qrToken
 
-        setStampCard(response.data)
+        setStampCard({
+          ...data.stampCard,
+          qrToken: data.qrToken,
+          businessName: data.businessName
+        })
 
         // Generate QR code
-        const scanUrl = `${window.location.origin}/scan/${qrToken}`
-        const canvas = canvasRef.current
-        if (canvas) {
-          await QRCode.toCanvas(canvas, scanUrl, {
-            width: 300,
-            margin: 2,
-            color: {
-              dark: "#000000",
-              light: "#FFFFFF",
-            },
-          })
-          const dataUrl = canvas.toDataURL()
-          setQrDataUrl(dataUrl)
+        if (qrToken) {
+          const scanUrl = `${window.location.origin}/scan/${qrToken}`
+          const canvas = canvasRef.current
+          if (canvas) {
+            await QRCode.toCanvas(canvas, scanUrl, {
+              width: 300,
+              margin: 2,
+              color: {
+                dark: "#000000",
+                light: "#FFFFFF",
+              },
+            })
+            const dataUrl = canvas.toDataURL()
+            setQrDataUrl(dataUrl)
+          }
         }
       } catch (error) {
         console.error("Failed to load QR:", error)
