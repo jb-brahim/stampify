@@ -30,7 +30,14 @@ export default function ScanTokenPage() {
 
     const processStamp = async () => {
       try {
-        const response = await customerAPI.scanQR(params.token as string)
+        // Get or generate device ID
+        let deviceId = localStorage.getItem("stampify-device-id")
+        if (!deviceId) {
+          deviceId = `device-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+          localStorage.setItem("stampify-device-id", deviceId)
+        }
+
+        const response = await customerAPI.scanQR(params.token as string, deviceId)
         addCard(response.data)
 
         setStatus("success")

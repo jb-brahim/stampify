@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
@@ -65,7 +64,6 @@ export default function RootLayout({
             <Footer />
           </div>
           <Toaster />
-          <Analytics />
           <RegisterServiceWorker />
         </ThemeProvider>
       </body>
