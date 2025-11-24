@@ -63,7 +63,13 @@ const scanQR = async (req, res) => {
           stamps: customer.stamps,
           totalStamps: businessOwner.stampCard.totalStamps,
           rewardAchieved: false,
-          progress: (customer.stamps / businessOwner.stampCard.totalStamps) * 100
+          progress: (customer.stamps / businessOwner.stampCard.totalStamps) * 100,
+          business: {
+            id: businessOwner._id,
+            name: businessOwner.businessName,
+            logo: businessOwner.logo,
+            rewardText: businessOwner.stampCard.rewardText
+          }
         }
       });
     }
@@ -71,7 +77,7 @@ const scanQR = async (req, res) => {
     // Existing customer - check rate limit
     if (customer.lastStampTime) {
       const timeSinceLastStamp = (now - customer.lastStampTime) / 1000; // seconds
-      
+
       if (timeSinceLastStamp < RATE_LIMIT_SECONDS) {
         const remainingSeconds = Math.ceil(RATE_LIMIT_SECONDS - timeSinceLastStamp);
         return res.status(429).json({
@@ -93,7 +99,13 @@ const scanQR = async (req, res) => {
           totalStamps: businessOwner.stampCard.totalStamps,
           rewardAchieved: customer.rewardAchieved,
           rewardText: businessOwner.stampCard.rewardText,
-          progress: 100
+          progress: 100,
+          business: {
+            id: businessOwner._id,
+            name: businessOwner.businessName,
+            logo: businessOwner.logo,
+            rewardText: businessOwner.stampCard.rewardText
+          }
         }
       });
     }
@@ -116,7 +128,13 @@ const scanQR = async (req, res) => {
           totalStamps: businessOwner.stampCard.totalStamps,
           rewardAchieved: true,
           rewardText: businessOwner.stampCard.rewardText,
-          progress: 100
+          progress: 100,
+          business: {
+            id: businessOwner._id,
+            name: businessOwner.businessName,
+            logo: businessOwner.logo,
+            rewardText: businessOwner.stampCard.rewardText
+          }
         }
       });
     }
@@ -131,7 +149,13 @@ const scanQR = async (req, res) => {
         stamps: customer.stamps,
         totalStamps: businessOwner.stampCard.totalStamps,
         rewardAchieved: false,
-        progress: (customer.stamps / businessOwner.stampCard.totalStamps) * 100
+        progress: (customer.stamps / businessOwner.stampCard.totalStamps) * 100,
+        business: {
+          id: businessOwner._id,
+          name: businessOwner.businessName,
+          logo: businessOwner.logo,
+          rewardText: businessOwner.stampCard.rewardText
+        }
       }
     });
   } catch (error) {
