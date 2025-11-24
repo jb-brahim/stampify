@@ -58,17 +58,19 @@ export default function CardsPage() {
           initial="initial"
           animate="animate"
         >
-          {cards.map((card, i) => (
-            <motion.div key={card.business.id} variants={fadeInUp}>
-              <StampCard
-                currentStamps={card.stamps}
-                totalStamps={card.totalStamps}
-                businessName={card.business.name}
-                rewardText={card.rewardText}
-                animated={true}
-              />
-            </motion.div>
-          ))}
+          {cards
+            .filter((card) => card.business && card.business.id) // Filter out legacy/invalid cards
+            .map((card, i) => (
+              <motion.div key={card.business.id} variants={fadeInUp}>
+                <StampCard
+                  currentStamps={card.stamps}
+                  totalStamps={card.totalStamps}
+                  businessName={card.business.name}
+                  rewardText={card.rewardText}
+                  animated={true}
+                />
+              </motion.div>
+            ))}
         </motion.div>
       ) : (
         <motion.div variants={fadeInUp}>
