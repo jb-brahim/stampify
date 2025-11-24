@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
-import { useAuthStore } from "@/store/auth-store"
 import { useCustomerStore } from "@/store/customer-store"
 import { customerAPI } from "@/services/api"
 import { useToast } from "@/hooks/use-toast"
@@ -12,22 +11,11 @@ import { Loader2, CheckCircle } from "lucide-react"
 export default function ScanTokenPage() {
   const router = useRouter()
   const params = useParams()
-  const { isAuthenticated, user } = useAuthStore()
   const { addCard } = useCustomerStore()
   const { toast } = useToast()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push(`/login?redirect=/scan/${params.token}`)
-      return
-    }
-
-    if (user?.role !== "customer") {
-      router.push("/login")
-      return
-    }
-
     const processStamp = async () => {
       try {
         // Get or generate device ID
@@ -43,7 +31,7 @@ export default function ScanTokenPage() {
         setStatus("success")
         toast({
           title: "Stamp collected!",
-          description: `You now have ${response.data.currentStamps} stamps`,
+          description: `You now have ${response.data.stamps} stamps at ${response.data.business.name}`,
         })
 
         setTimeout(() => {
@@ -64,7 +52,7 @@ export default function ScanTokenPage() {
     }
 
     processStamp()
-  }, [isAuthenticated, user, router, params.token, addCard, toast])
+  }, [router, params.token, addCard, toast])
 
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8">

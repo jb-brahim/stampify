@@ -17,12 +17,17 @@ export interface StampCard {
 
 export interface CustomerProgress {
   customerId: string
-  cardId: string
-  currentStamps: number
+  stamps: number
   totalStamps: number
+  rewardAchieved: boolean
   rewardText: string
-  businessName: string
-  lastStampDate?: string
+  progress: number
+  business: {
+    id: string
+    name: string
+    logo?: string
+    rewardText: string
+  }
 }
 
 export interface BusinessStats {

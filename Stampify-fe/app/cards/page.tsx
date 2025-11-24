@@ -1,43 +1,23 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useAuthStore } from "@/store/auth-store"
 import { useCustomerStore } from "@/store/customer-store"
-import { customerAPI } from "@/services/api"
 import { StampCard } from "@/components/stamp-card"
 import { Loader2, QrCode, Package } from "lucide-react"
 import { motion } from "framer-motion"
 import { staggerContainer, fadeInUp, pageTransition } from "@/lib/animations"
 
 export default function CardsPage() {
-  const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
-  const { cards, addCard } = useCustomerStore()
+  const { cards } = useCustomerStore()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "customer") {
-      router.push("/login")
-      return
-    }
-
-    const loadCards = async () => {
-      try {
-        const response = await customerAPI.getMyCards()
-        response.data.forEach((card: any) => addCard(card))
-      } catch (error) {
-        console.error("Failed to load cards:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadCards()
-  }, [isAuthenticated, user, router, addCard])
+    // Just show the cards from local storage
+    setIsLoading(false)
+  }, [])
 
   if (isLoading) {
     return (
@@ -77,19 +57,14 @@ export default function CardsPage() {
           animate="animate"
         >
           {cards.map((card, i) => (
-            <motion.div key={card.cardId} variants={fadeInUp}>
+            <motion.div key={card.business.id} variants={fadeInUp}>
               <StampCard
-                currentStamps={card.currentStamps}
+                currentStamps={card.stamps}
                 totalStamps={card.totalStamps}
-                businessName={card.businessName}
+                businessName={card.business.name}
                 rewardText={card.rewardText}
                 animated={true}
               />
-              {card.lastStampDate && (
-                <p className="mt-2 text-center text-sm text-muted-foreground">
-                  Last stamp: {new Date(card.lastStampDate).toLocaleDateString()}
-                </p>
-              )}
             </motion.div>
           ))}
         </motion.div>

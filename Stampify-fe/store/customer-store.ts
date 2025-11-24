@@ -5,7 +5,7 @@ import type { CustomerProgress } from "@/lib/types"
 interface CustomerState {
   cards: CustomerProgress[]
   addCard: (card: CustomerProgress) => void
-  updateCard: (cardId: string, stamps: number) => void
+  updateCard: (businessId: string, stamps: number) => void
   clearCards: () => void
 }
 
@@ -15,17 +15,17 @@ export const useCustomerStore = create<CustomerState>()(
       cards: [],
       addCard: (card) =>
         set((state) => {
-          const existing = state.cards.find((c) => c.cardId === card.cardId)
+          const existing = state.cards.find((c) => c.business.id === card.business.id)
           if (existing) {
             return {
-              cards: state.cards.map((c) => (c.cardId === card.cardId ? card : c)),
+              cards: state.cards.map((c) => (c.business.id === card.business.id ? card : c)),
             }
           }
           return { cards: [...state.cards, card] }
         }),
-      updateCard: (cardId, stamps) =>
+      updateCard: (businessId, stamps) =>
         set((state) => ({
-          cards: state.cards.map((c) => (c.cardId === cardId ? { ...c, currentStamps: stamps } : c)),
+          cards: state.cards.map((c) => (c.business.id === businessId ? { ...c, stamps } : c)),
         })),
       clearCards: () => set({ cards: [] }),
     }),
