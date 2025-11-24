@@ -57,9 +57,13 @@ export default function QRCodePage() {
         console.log('Stamp Card:', data.stampCard)
 
         setStampCard({
-          ...data.stampCard,
+          id: user?.id || '', // Use business owner ID as card ID
+          businessId: user?.id || '',
+          businessName: data.businessName,
+          totalStamps: data.stampCard.totalStamps,
+          rewardText: data.stampCard.rewardText,
           qrToken: data.qrToken,
-          businessName: data.businessName
+          createdAt: new Date().toISOString()
         })
 
         setIsLoading(false)
