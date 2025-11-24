@@ -13,13 +13,15 @@ import { staggerContainer, fadeInUp, pageTransition } from "@/lib/animations"
 export default function CardsPage() {
   const { cards } = useCustomerStore()
   const [isLoading, setIsLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Just show the cards from local storage
+    // Wait for client-side hydration to complete
+    setMounted(true)
     setIsLoading(false)
   }, [])
 
-  if (isLoading) {
+  if (isLoading || !mounted) {
     return (
       <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
