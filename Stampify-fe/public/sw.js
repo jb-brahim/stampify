@@ -50,8 +50,9 @@ self.addEventListener("fetch", (event) => {
         // Clone the response
         const responseToCache = response.clone()
 
-        // Don't cache API requests
-        if (!event.request.url.includes("/api/")) {
+        // Only cache GET requests (Cache API doesn't support POST, PUT, etc.)
+        // Also don't cache API requests
+        if (event.request.method === "GET" && !event.request.url.includes("/api/")) {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache)
           })
