@@ -31,6 +31,7 @@ app.use('/api/qr', require('./routes/qrRoutes'));
 app.use('/api/scan', require('./routes/scanRoutes'));
 app.use('/api/customer', require('./routes/customerRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/redemption', require('./routes/redemptionRoutes'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

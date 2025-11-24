@@ -25,7 +25,21 @@ const customerSchema = new mongoose.Schema({
   lastStampTime: {
     type: Date,
     default: null
-  }
+  },
+  redemptionRequests: [{
+    requestedAt: {
+      type: Date,
+      default: Date.now
+    },
+    redeemedAt: {
+      type: Date
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    }
+  }]
 }, {
   timestamps: true
 });
