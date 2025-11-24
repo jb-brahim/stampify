@@ -62,24 +62,7 @@ export default function QRCodePage() {
           businessName: data.businessName
         })
 
-        // Generate QR code
-        if (qrToken) {
-          const scanUrl = `${window.location.origin}/scan/${qrToken}`
-          console.log('Scan URL:', scanUrl)
-          const canvas = canvasRef.current
-          if (canvas) {
-            await QRCode.toCanvas(canvas, scanUrl, {
-              width: 300,
-              margin: 2,
-              color: {
-                dark: "#000000",
-                light: "#FFFFFF",
-              },
-            })
-            const dataUrl = canvas.toDataURL()
-            setQrDataUrl(dataUrl)
-          }
-        }
+        setIsLoading(false)
       } catch (error) {
         console.error("Failed to load QR:", error)
         toast({
@@ -87,13 +70,59 @@ export default function QRCodePage() {
           description: "Please try again later",
           variant: "destructive",
         })
-      } finally {
         setIsLoading(false)
       }
     }
 
     loadQR()
   }, [_hasHydrated, isAuthenticated, user, router, setStampCard, toast])
+
+  // Separate effect for QR code generation
+  useEffect(() => {
+    const generateQR = async () => {
+      if (!stampCard?.qrToken) {
+        console.log('No QR token available yet')
+        return
+      }
+
+      console.log('Generating QR code for token:', stampCard.qrToken)
+      const canvas = canvasRef.current
+      console.log('Canvas ref:', canvas)
+
+      if (!canvas) {
+        console.error('Canvas ref is null!')
+        return
+      }
+
+      try {
+        const scanUrl = `${window.location.origin}/scan/${stampCard.qrToken}`
+        console.log('Generating QR for URL:', scanUrl)
+
+        await QRCode.toCanvas(canvas, scanUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        })
+
+        console.log('QR code generated successfully on canvas')
+        const dataUrl = canvas.toDataURL()
+        setQrDataUrl(dataUrl)
+        console.log('QR data URL set')
+      } catch (error) {
+        console.error('Error generating QR code:', error)
+        toast({
+          title: "Failed to generate QR code",
+          description: "Please refresh the page",
+          variant: "destructive",
+        })
+      }
+    }
+
+    generateQR()
+  }, [stampCard?.qrToken, toast])
 
   const handleDownload = () => {
     if (qrDataUrl) {
