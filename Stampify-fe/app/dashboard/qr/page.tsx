@@ -80,8 +80,15 @@ export default function QRCodePage() {
   // Separate effect for QR code generation
   useEffect(() => {
     const generateQR = async () => {
-      if (!stampCard?.qrToken) {
-        console.log('No QR token available yet')
+      // Don't generate if still loading or no token
+      if (isLoading || !stampCard?.qrToken) {
+        console.log('Skipping QR generation - isLoading:', isLoading, 'qrToken:', stampCard?.qrToken)
+        return
+      }
+
+      // Don't regenerate if we already have a QR data URL
+      if (qrDataUrl) {
+        console.log('QR code already generated, skipping')
         return
       }
 
@@ -122,7 +129,7 @@ export default function QRCodePage() {
     }
 
     generateQR()
-  }, [stampCard?.qrToken, toast])
+  }, [stampCard?.qrToken, isLoading, qrDataUrl, toast])
 
   const handleDownload = () => {
     if (qrDataUrl) {
