@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Check } from "lucide-react"
+import { Check, Gift, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { stampPunch, confettiTrigger } from "@/lib/animations"
 import { haptics } from "@/lib/haptics"
+import { Button } from "@/components/ui/button"
 
 interface StampCardProps {
   currentStamps: number
@@ -14,9 +15,19 @@ interface StampCardProps {
   businessName: string
   rewardText: string
   animated?: boolean
+  onRedeem?: () => void
+  redemptionStatus?: "pending" | "approved" | "rejected" | null
 }
 
-export function StampCard({ currentStamps, totalStamps, businessName, rewardText, animated = false }: StampCardProps) {
+export function StampCard({
+  currentStamps,
+  totalStamps,
+  businessName,
+  rewardText,
+  animated = false,
+  onRedeem,
+  redemptionStatus
+}: StampCardProps) {
   const progress = totalStamps > 0 ? (currentStamps / totalStamps) * 100 : 0
   const [prevStamps, setPrevStamps] = useState(currentStamps)
 
@@ -114,16 +125,37 @@ export function StampCard({ currentStamps, totalStamps, businessName, rewardText
         </motion.div>
 
         <AnimatePresence>
-          {currentStamps === totalStamps && (
+          {currentStamps >= totalStamps && (
             <motion.div
-              className="mt-4 rounded-lg bg-primary p-4 text-center text-primary-foreground"
+              className="mt-4"
               initial={{ opacity: 0, scale: 0.9, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 200 }}
             >
-              <p className="text-lg font-bold">Card Complete!</p>
-              <p className="text-sm">Show this to redeem your reward</p>
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={onRedeem}
+                disabled={redemptionStatus === 'pending'}
+                variant={redemptionStatus === 'pending' ? 'secondary' : 'default'}
+              >
+                {redemptionStatus === 'pending' ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Redemption Pending
+                  </>
+                ) : (
+                  <>
+                    <Gift className="h-4 w-4" />
+                    Redeem Reward
+                  </>
+                )}
+              </Button>
+              {redemptionStatus === 'pending' && (
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  Waiting for business approval
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

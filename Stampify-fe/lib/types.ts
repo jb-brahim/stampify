@@ -28,6 +28,12 @@ export interface CustomerProgress {
     logo?: string
     rewardText: string
   }
+  redemptionRequests?: {
+    _id: string
+    status: "pending" | "approved" | "rejected"
+    requestedAt: string
+    redeemedAt?: string
+  }[]
 }
 
 export interface BusinessStats {

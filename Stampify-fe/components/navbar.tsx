@@ -56,6 +56,11 @@ export function Navbar() {
                 Demo
               </Link>
               <ThemeToggle />
+              <Link href="/scan">
+                <Button variant="ghost" size="sm">
+                  Scan QR
+                </Button>
+              </Link>
               <Link href="/login">
                 <Button variant="ghost" size="sm">
                   Login
@@ -95,6 +100,15 @@ export function Navbar() {
                     )}
                   >
                     QR Code
+                  </Link>
+                  <Link
+                    href="/dashboard/redemptions"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      isActive("/dashboard/redemptions") ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    Redemptions
                   </Link>
                 </>
               ) : user?.role === "admin" ? (
@@ -176,6 +190,11 @@ export function Navbar() {
                   <Link href="/demo" onClick={toggleMenu} className="text-sm font-medium">
                     Demo
                   </Link>
+                  <Link href="/scan" onClick={toggleMenu}>
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Scan QR
+                    </Button>
+                  </Link>
                   <Link href="/login" onClick={toggleMenu}>
                     <Button variant="ghost" size="sm" className="w-full">
                       Login
@@ -199,6 +218,9 @@ export function Navbar() {
                       </Link>
                       <Link href="/dashboard/qr" onClick={toggleMenu} className="text-sm font-medium">
                         QR Code
+                      </Link>
+                      <Link href="/dashboard/redemptions" onClick={toggleMenu} className="text-sm font-medium">
+                        Redemptions
                       </Link>
                     </>
                   ) : user?.role === "admin" ? (

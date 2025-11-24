@@ -1,313 +1,133 @@
 "use client"
 
-import type React from "react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useAuthStore } from "@/store/auth-store"
-import { useCustomerStore } from "@/store/customer-store"
-import { customerAPI } from "@/services/api"
-import { useToast } from "@/hooks/use-toast"
-import { Camera, Loader2, CheckCircle, Keyboard, Flashlight, Package, QrCode } from "lucide-react"
 import QrScanner from "qr-scanner"
-import { motion, AnimatePresence } from "framer-motion"
-import { pageTransition, scanSuccess } from "@/lib/animations"
-import { haptics } from "@/lib/haptics"
-import { confettiTrigger } from "@/lib/animations"
-import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
-export default function ScanPage() {
+export default function PublicScanPage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuthStore()
-  const { addCard } = useCustomerStore()
-  const { toast } = useToast()
-
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [scanner, setScanner] = useState<QrScanner | null>(null)
-  const [isScanning, setIsScanning] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [showManualEntry, setShowManualEntry] = useState(false)
-  const [manualToken, setManualToken] = useState("")
-  const [scanSuccessful, setScanSuccessful] = useState(false)
-  const [flashEnabled, setFlashEnabled] = useState(false)
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const scannerRef = useRef<QrScanner | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role !== "customer") {
-      router.push("/login")
-      return
-    }
-  }, [isAuthenticated, user, router])
+    const startScanner = async () => {
+      if (!videoRef.current) return
 
-  const startScanning = async () => {
-    if (!videoRef.current) return
-
-    try {
-      const qrScanner = new QrScanner(videoRef.current, (result) => handleScan(result.data), {
-        highlightScanRegion: true,
-        highlightCodeOutline: true,
-      })
-
-      await qrScanner.start()
-      setScanner(qrScanner)
-      setIsScanning(true)
-    } catch (error) {
-      console.error("Failed to start scanner:", error)
-      toast({
-        title: "Camera access denied",
-        description: "Please enable camera permissions to scan QR codes",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const stopScanning = () => {
-    if (scanner) {
-      scanner.stop()
-      scanner.destroy()
-      setScanner(null)
-    }
-    setIsScanning(false)
-  }
-
-  const toggleFlash = async () => {
-    if (scanner) {
       try {
-        await scanner.toggleFlash()
-        setFlashEnabled(!flashEnabled)
-        haptics.light()
+        // Initialize scanner
+        scannerRef.current = new QrScanner(
+          videoRef.current,
+          (result) => handleScan(result),
+          {
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            returnDetailedScanResult: true,
+          }
+        )
+
+        await scannerRef.current.start()
+        setHasPermission(true)
       } catch (error) {
-        toast({
-          title: "Flash not available",
-          description: "Your device doesn't support flashlight",
-          variant: "destructive",
-        })
+        console.error("Failed to start scanner:", error)
+        setHasPermission(false)
+        toast.error("Could not access camera. Please ensure you have granted permission.")
       }
     }
-  }
 
-  const handleScan = async (data: string) => {
-    if (isProcessing) return
+    startScanner()
 
-    setIsProcessing(true)
-    stopScanning()
-
-    try {
-      const token = data.includes("/scan/") ? data.split("/scan/")[1] : data
-
-      const response = await customerAPI.scanQR(token)
-      addCard(response.data)
-
-      setScanSuccessful(true)
-      haptics.success()
-
-      // Trigger confetti if card is complete
-      if (response.data.currentStamps === response.data.totalStamps) {
-        await confettiTrigger()
-      }
-
-      toast({
-        title: "Stamp collected!",
-        description: `You now have ${response.data.currentStamps} of ${response.data.totalStamps} stamps`,
-      })
-
-      setTimeout(() => {
-        router.push("/cards")
-      }, 2000)
-    } catch (error: any) {
-      haptics.error()
-      toast({
-        title: "Scan failed",
-        description: error.response?.data?.message || "Invalid QR code",
-        variant: "destructive",
-      })
-      setIsProcessing(false)
-    }
-  }
-
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await handleScan(manualToken)
-  }
-
-  useEffect(() => {
     return () => {
-      if (scanner) {
-        scanner.stop()
-        scanner.destroy()
+      if (scannerRef.current) {
+        scannerRef.current.stop()
+        scannerRef.current.destroy()
+        scannerRef.current = null
       }
     }
-  }, [scanner])
+  }, [])
+
+  const handleScan = (result: QrScanner.ScanResult) => {
+    if (!result?.data) return
+
+    const scannedData = result.data
+
+    // Stop scanning to prevent multiple redirects
+    if (scannerRef.current) {
+      scannerRef.current.stop()
+    }
+
+    // Parse the URL to get the token
+    // Expected formats: 
+    // 1. Full URL: https://domain.com/scan/TOKEN
+    // 2. Raw Token: UUID
+    try {
+      let token = ""
+
+      if (scannedData.includes("/scan/")) {
+        const url = new URL(scannedData)
+        const pathParts = url.pathname.split('/')
+        const tokenIndex = pathParts.indexOf('scan') + 1
+        if (tokenIndex > 0 && tokenIndex < pathParts.length) {
+          token = pathParts[tokenIndex]
+        }
+      } else if (scannedData.length > 20 && !scannedData.includes("http")) {
+        // Assume it's a raw token
+        token = scannedData
+      }
+
+      if (token) {
+        toast.success("QR Code detected! Redirecting...")
+        router.push(`/scan/${token}`)
+      } else {
+        toast.error("Invalid QR Code format")
+        // Resume scanning after a short delay
+        setTimeout(() => {
+          scannerRef.current?.start()
+        }, 2000)
+      }
+    } catch (e) {
+      console.error("Error parsing QR code:", e)
+      toast.error("Invalid QR Code")
+      setTimeout(() => {
+        scannerRef.current?.start()
+      }, 2000)
+    }
+  }
 
   return (
-    <motion.div
-      className="container mx-auto px-4 py-8 pb-24 md:pb-8"
-      variants={pageTransition}
-      initial="initial"
-      animate="animate"
-    >
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold">Scan QR Code</h1>
-        <p className="text-muted-foreground">Point your camera at the business QR code</p>
-      </div>
+    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle>Scan QR Code</CardTitle>
+          <CardDescription>Point your camera at a Stampify QR code to collect stamps</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-4">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-black">
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              playsInline // Important for iOS
+            />
+            {!hasPermission && hasPermission !== null && (
+              <div className="absolute inset-0 flex items-center justify-center text-white bg-black/80">
+                <p>Camera permission denied</p>
+              </div>
+            )}
+            {hasPermission === null && (
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            )}
+          </div>
 
-      <div className="mx-auto max-w-2xl">
-        <AnimatePresence mode="wait">
-          {scanSuccessful ? (
-            <motion.div key="success" variants={scanSuccess} initial="initial" animate="animate">
-              <Card className="border-primary bg-primary/5">
-                <CardContent className="flex flex-col items-center py-12">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  >
-                    <CheckCircle className="mb-4 h-16 w-16 text-primary" />
-                  </motion.div>
-                  <h3 className="mb-2 text-xl font-semibold text-primary">Stamp Collected!</h3>
-                  <p className="text-sm text-muted-foreground">Redirecting to your cards...</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="scanner"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>QR Scanner</CardTitle>
-                  <CardDescription>Scan to collect your stamp</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Camera View */}
-                  <div className="relative aspect-square overflow-hidden rounded-lg border-2 border-border bg-black">
-                    {isScanning ? (
-                      <>
-                        <video ref={videoRef} className="h-full w-full object-cover" />
-                        {/* Scanning Guide Overlay */}
-                        <motion.div
-                          className="absolute inset-0 flex items-center justify-center"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                        >
-                          <div className="h-48 w-48 rounded-xl border-4 border-primary shadow-lg shadow-primary/50" />
-                        </motion.div>
-                        {/* Flash Button */}
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute right-4 top-4 rounded-full"
-                          onClick={toggleFlash}
-                        >
-                          <Flashlight className={`h-4 w-4 ${flashEnabled ? "text-yellow-500" : ""}`} />
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted/30">
-                        <div className="text-center">
-                          <Camera className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">Camera inactive</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Controls */}
-                  <div className="flex gap-2">
-                    {!isScanning && !isProcessing && (
-                      <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button onClick={startScanning} className="w-full gap-2">
-                          <Camera className="h-4 w-4" />
-                          Start Camera
-                        </Button>
-                      </motion.div>
-                    )}
-                    {isScanning && (
-                      <Button onClick={stopScanning} variant="outline" className="flex-1 bg-transparent">
-                        Stop Scanning
-                      </Button>
-                    )}
-                    {isProcessing && (
-                      <Button disabled className="flex-1 gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Processing...
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Manual Entry Toggle */}
-                  {!showManualEntry && (
-                    <Button variant="ghost" size="sm" onClick={() => setShowManualEntry(true)} className="w-full gap-2">
-                      <Keyboard className="h-4 w-4" />
-                      Enter code manually
-                    </Button>
-                  )}
-
-                  {/* Manual Entry Form */}
-                  <AnimatePresence>
-                    {showManualEntry && (
-                      <motion.form
-                        onSubmit={handleManualSubmit}
-                        className="space-y-4"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                      >
-                        <div className="space-y-2">
-                          <Label htmlFor="token">Enter QR Code</Label>
-                          <Input
-                            id="token"
-                            type="text"
-                            placeholder="Paste or type code here"
-                            value={manualToken}
-                            onChange={(e) => setManualToken(e.target.value)}
-                            required
-                            disabled={isProcessing}
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button type="submit" disabled={isProcessing || !manualToken} className="flex-1">
-                            {isProcessing ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Processing...
-                              </>
-                            ) : (
-                              "Submit"
-                            )}
-                          </Button>
-                          <Button type="button" variant="outline" onClick={() => setShowManualEntry(false)}>
-                            Cancel
-                          </Button>
-                        </div>
-                      </motion.form>
-                    )}
-                  </AnimatePresence>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-        <div className="container mx-auto flex items-center justify-around p-4">
-          <Link href="/cards" className="flex flex-col items-center gap-1">
-            <Package className="h-5 w-5" />
-            <span className="text-xs font-medium">My Cards</span>
-          </Link>
-          <Link href="/scan" className="flex flex-col items-center gap-1 text-primary">
-            <QrCode className="h-5 w-5" />
-            <span className="text-xs font-medium">Scan</span>
-          </Link>
-        </div>
-      </div>
-    </motion.div>
+          <p className="text-sm text-muted-foreground text-center">
+            Make sure the QR code is clearly visible and well-lit.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

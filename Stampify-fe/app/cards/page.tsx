@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { staggerContainer, fadeInUp, pageTransition } from "@/lib/animations"
 
 export default function CardsPage() {
-  const { cards } = useCustomerStore()
+  const { cards, requestRedemption } = useCustomerStore()
   const [isLoading, setIsLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
@@ -67,7 +67,18 @@ export default function CardsPage() {
                   totalStamps={card.totalStamps}
                   businessName={card.business.name}
                   rewardText={card.rewardText}
-                  animated={true}
+                  onRedeem={() => {
+                    requestRedemption(card.business.id)
+                      .then(() => {
+                        // Success handled by store update
+                      })
+                      .catch((err) => {
+                        // Error handled by store
+                      })
+                  }}
+                  redemptionStatus={
+                    card.redemptionRequests?.find((r) => r.status === "pending") ? "pending" : null
+                  }
                 />
               </motion.div>
             ))}

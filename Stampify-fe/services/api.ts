@@ -85,6 +85,14 @@ export const customerAPI = {
   scanQR: (qrToken: string, deviceId: string) => api.post(`/scan/${qrToken}`, { deviceId }),
 }
 
+// Redemption endpoints
+export const redemptionAPI = {
+  request: (customerId: string, deviceId: string) => api.post("/redemption/request", { customerId, deviceId }),
+  getPending: () => api.get("/redemption/pending"),
+  approve: (customerId: string, redemptionId: string) => api.post("/redemption/approve", { customerId, redemptionId }),
+  reject: (customerId: string, redemptionId: string) => api.post("/redemption/reject", { customerId, redemptionId }),
+}
+
 // Admin endpoints
 export const adminAPI = {
   login: (email: string, password: string) => api.post("/admin/login", { email, password }),
