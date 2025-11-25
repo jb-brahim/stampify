@@ -11,15 +11,19 @@ import { motion } from "framer-motion"
 import { staggerContainer, fadeInUp, pageTransition } from "@/lib/animations"
 
 export default function CardsPage() {
-  const { cards, requestRedemption } = useCustomerStore()
+  const { cards, requestRedemption, refreshCards } = useCustomerStore()
   const [isLoading, setIsLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     // Wait for client-side hydration to complete
     setMounted(true)
-    setIsLoading(false)
-  }, [])
+
+    // Refresh cards from backend
+    refreshCards().finally(() => {
+      setIsLoading(false)
+    })
+  }, [refreshCards])
 
   if (isLoading || !mounted) {
     return (

@@ -8,9 +8,10 @@ interface CustomerState {
   updateCard: (businessId: string, stamps: number) => void
   clearCards: () => void
   requestRedemption: (businessId: string) => Promise<void>
+  refreshCards: () => Promise<void>
 }
 
-import { redemptionAPI } from "@/services/api"
+import { redemptionAPI, customerAPI } from "@/services/api"
 
 export const useCustomerStore = create<CustomerState>()(
   persist(
@@ -61,6 +62,33 @@ export const useCustomerStore = create<CustomerState>()(
         } catch (error) {
           console.error("Redemption request failed:", error)
           throw error
+        }
+      },
+      refreshCards: async () => {
+        const cards = get().cards
+        if (cards.length === 0) return
+
+        try {
+          const updatedCards = await Promise.all(
+            cards.map(async (card) => {
+              try {
+                const response = await customerAPI.getCustomerCard(card.customerId)
+                return {
+                  ...card,
+                  stamps: response.data.data.customer.stamps,
+                  rewardAchieved: response.data.data.customer.rewardAchieved,
+                  totalStamps: response.data.data.business.totalStamps,
+                  rewardText: response.data.data.business.rewardText,
+                }
+              } catch (error) {
+                console.error(`Failed to refresh card for ${card.business.name}:`, error)
+                return card // Keep existing data if refresh fails
+              }
+            })
+          )
+          set({ cards: updatedCards })
+        } catch (error) {
+          console.error("Failed to refresh cards:", error)
         }
       },
     }),
