@@ -78,6 +78,7 @@ export const businessAPI = {
   getCard: () => api.get("/card/my"),
   updateCard: (totalStamps: number, rewardText: string) => api.put("/card/update", { totalStamps, rewardText }),
   getQR: () => api.get("/qr/my"),
+  getStats: () => api.get("/card/stats"),
 }
 
 // Customer endpoints

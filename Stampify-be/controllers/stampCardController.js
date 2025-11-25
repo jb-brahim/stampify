@@ -6,7 +6,7 @@ const BusinessOwner = require('../models/BusinessOwner');
 const getMyCard = async (req, res) => {
   try {
     const businessOwner = await BusinessOwner.findById(req.user._id).select('-password');
-    
+
     if (!businessOwner) {
       return res.status(404).json({
         success: false,
@@ -89,8 +89,43 @@ const updateCard = async (req, res) => {
   }
 };
 
+/**
+ * Get business owner's statistics
+ */
+const getMyStats = async (req, res) => {
+  try {
+    const businessId = req.user._id;
+    const Customer = require('../models/Customer');
+
+    // Get all customers for this business
+    const customers = await Customer.find({ businessId });
+
+    // Calculate stats
+    const totalCustomers = customers.length;
+    const totalStampsGiven = customers.reduce((sum, customer) => sum + customer.stamps, 0);
+    const totalRewardsRedeemed = customers.filter(c => c.rewardAchieved).length;
+
+    res.json({
+      success: true,
+      data: {
+        totalCustomers,
+        totalStampsGiven,
+        totalRewardsRedeemed,
+        recentActivity: [] // TODO: Implement recent activity tracking
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching stats',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getMyCard,
-  updateCard
+  updateCard,
+  getMyStats
 };
 

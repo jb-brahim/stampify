@@ -52,15 +52,8 @@ export default function DashboardPage() {
 
     const loadStats = async () => {
       try {
-        // const response = await businessAPI.getStats()
-        // setStats(response.data)
-        // TODO: Implement correct business stats endpoint
-        setStats({
-          totalCustomers: 0,
-          totalStampsGiven: 0,
-          totalRewardsRedeemed: 0,
-          recentActivity: []
-        })
+        const response = await businessAPI.getStats()
+        setStats(response.data.data)
       } catch (error) {
         console.error("Failed to load stats:", error)
       } finally {

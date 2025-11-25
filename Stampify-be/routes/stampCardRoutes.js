@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { getMyCard, updateCard } = require('../controllers/stampCardController');
+const { getMyCard, updateCard, getMyStats } = require('../controllers/stampCardController');
 const authenticateToken = require('../middleware/auth');
 const validate = require('../middleware/validation');
 
@@ -19,6 +19,7 @@ const updateValidation = [
 ];
 
 router.get('/my', authenticateToken, getMyCard);
+router.get('/stats', authenticateToken, getMyStats);
 router.put('/update', authenticateToken, updateValidation, validate, updateCard);
 
 module.exports = router;
