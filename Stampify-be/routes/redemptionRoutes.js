@@ -6,7 +6,7 @@ const {
     approveRedemption,
     rejectRedemption
 } = require('../controllers/redemptionController');
-const { authenticateToken } = require('../middleware/auth');
+const authenticateToken = require('../middleware/auth');
 
 // Public route (Customer)
 router.post('/request', requestRedemption);
