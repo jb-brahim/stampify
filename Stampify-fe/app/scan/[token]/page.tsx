@@ -26,12 +26,25 @@ export default function ScanTokenPage() {
         }
 
         const response = await customerAPI.scanQR(params.token as string, deviceId)
-        addCard(response.data)
+
+        if (response.data.isNewUser) {
+          // Redirect to registration
+          const business = response.data.data.business
+          const searchParams = new URLSearchParams({
+            businessId: business.id,
+            businessName: business.name,
+            deviceId: deviceId
+          })
+          router.push(`/register?${searchParams.toString()}`)
+          return
+        }
+
+        addCard(response.data.data)
 
         setStatus("success")
         toast({
           title: "Stamp collected!",
-          description: `You now have ${response.data.stamps} stamps at ${response.data.business.name}`,
+          description: `You now have ${response.data.data.stamps} stamps at ${response.data.data.business.name}`,
         })
 
         setTimeout(() => {

@@ -83,6 +83,8 @@ export const businessAPI = {
 export const customerAPI = {
   getCustomerCard: (customerId: string) => api.get(`/customer/${customerId}`),
   scanQR: (qrToken: string, deviceId: string) => api.post(`/scan/${qrToken}`, { deviceId }),
+  register: (data: { businessId: string; deviceId: string; name: string; email?: string; phone?: string }) =>
+    api.post("/customer/register", data),
 }
 
 // Redemption endpoints

@@ -46,24 +46,12 @@ const scanQR = async (req, res) => {
     const RATE_LIMIT_SECONDS = 10;
 
     if (!customer) {
-      // First scan - create new customer
-      customer = new Customer({
-        businessId: businessOwner._id,
-        deviceId: deviceId,
-        stamps: 1,
-        lastStampTime: now
-      });
-      await customer.save();
-
+      // First scan - return isNewUser flag to trigger registration
       return res.json({
         success: true,
-        message: 'Welcome! Your first stamp has been added.',
+        isNewUser: true,
+        message: 'New user detected. Please register to collect your stamp.',
         data: {
-          customerId: customer._id,
-          stamps: customer.stamps,
-          totalStamps: businessOwner.stampCard.totalStamps,
-          rewardAchieved: false,
-          progress: (customer.stamps / businessOwner.stampCard.totalStamps) * 100,
           business: {
             id: businessOwner._id,
             name: businessOwner.businessName,

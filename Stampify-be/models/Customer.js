@@ -13,6 +13,19 @@ const customerSchema = new mongoose.Schema({
     required: [true, 'Device ID is required'],
     default: () => uuidv4()
   },
+  name: {
+    type: String,
+    trim: true
+  },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
   stamps: {
     type: Number,
     default: 0,
