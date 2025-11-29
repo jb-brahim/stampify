@@ -1,80 +1,44 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Stamp, Gift } from "lucide-react"
-
-interface StampCard {
-  businessId: string
-  businessName: string
-  stamps: number
-  totalStamps: number
-  rewardText: string
-  rewardAchieved: boolean
-  lastStampTime: string
-}
+import { Button } from "@/components/ui/button"
+import { Stamp, Gift, RefreshCw } from "lucide-react"
+import { useCustomerStore } from "@/store/customer-store"
 
 export default function MyCardsPage() {
-  const [cards, setCards] = useState<StampCard[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { cards, refreshCards } = useCustomerStore()
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    // Get cards from customer store (stored after scanning)
-    const loadCards = () => {
-      try {
-        // Get device ID
-        const deviceId = localStorage.getItem('stampify-device-id') || ''
-
-        // Get customer store data
-        const customerStoreData = localStorage.getItem('stampify-customer-store')
-        if (customerStoreData) {
-          const parsed = JSON.parse(customerStoreData)
-          const customerCards = parsed.state?.cards || []
-
-          // Convert to StampCard format
-          const formattedCards: StampCard[] = customerCards.map((card: any) => ({
-            businessId: card.business?.id || '',
-            businessName: card.business?.name || 'Unknown Business',
-            stamps: card.stamps || 0,
-            totalStamps: card.totalStamps || 10,
-            rewardText: card.business?.rewardText || 'Free Reward',
-            rewardAchieved: card.rewardAchieved || false,
-            lastStampTime: card.lastStampTime || new Date().toISOString()
-          }))
-
-          setCards(formattedCards)
-        }
-      } catch (error) {
-        console.error('Error loading cards:', error)
-      } finally {
-        setIsLoading(false)
-      }
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await refreshCards()
+    } catch (error) {
+      console.error('Failed to refresh:', error)
+    } finally {
+      setIsRefreshing(false)
     }
-
-    loadCards()
-
-    // Reload when storage changes (after scanning)
-    const handleStorageChange = () => loadCards()
-    window.addEventListener('storage', handleStorageChange)
-
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-8">
-        <p>Loading your cards...</p>
-      </div>
-    )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">My Stamp Cards</h1>
-        <p className="text-muted-foreground">View all your loyalty cards in one place</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">My Stamp Cards</h1>
+          <p className="text-muted-foreground">View all your loyalty cards in one place</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {cards.length === 0 ? (
@@ -96,7 +60,7 @@ export default function MyCardsPage() {
               <Card key={index} className="overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{card.businessName}</CardTitle>
+                    <CardTitle className="text-lg">{card.business.name}</CardTitle>
                     {card.rewardAchieved && (
                       <Badge className="bg-green-500">
                         <Gift className="h-3 w-3 mr-1" />
@@ -119,7 +83,7 @@ export default function MyCardsPage() {
 
                     <div className="rounded-lg bg-muted p-3">
                       <p className="text-xs text-muted-foreground mb-1">Reward</p>
-                      <p className="text-sm font-medium">{card.rewardText}</p>
+                      <p className="text-sm font-medium">{card.business.rewardText || 'Free Reward'}</p>
                     </div>
 
                     {card.lastStampTime && (
@@ -138,7 +102,7 @@ export default function MyCardsPage() {
       <div className="mt-8 rounded-lg border border-dashed p-6 text-center">
         <p className="text-sm text-muted-foreground">
           💡 <strong>Tip:</strong> Your stamp cards are stored on this device.
-          To view cards from other devices, you'll need to scan the QR codes again.
+          Click the Refresh button to update your stamps from the server.
         </p>
       </div>
     </div>
