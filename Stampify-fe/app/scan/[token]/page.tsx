@@ -49,13 +49,33 @@ export default function ScanTokenPage() {
         }
 
         // Email exists, proceed with normal scan
+        if (!email) {
+          throw new Error("Email not found")
+        }
         const response = await customerAPI.scanQR(params.token as string, email)
 
         addCard(response.data.data)
 
-        // Play success sound
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHgU2jdXvz3kpBSh+zPDajzsKElyx6OyrWBQLSKDf8sFuJAUuhM/z1YU1Bxdmvue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw')
-        audio.play().catch(e => console.log('Audio play failed:', e))
+        // Play success beep sound
+        try {
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const oscillator = audioContext.createOscillator()
+          const gainNode = audioContext.createGain()
+
+          oscillator.connect(gainNode)
+          gainNode.connect(audioContext.destination)
+
+          oscillator.frequency.value = 800
+          oscillator.type = 'sine'
+
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+
+          oscillator.start(audioContext.currentTime)
+          oscillator.stop(audioContext.currentTime + 0.2)
+        } catch (e) {
+          console.log('Audio play failed:', e)
+        }
 
         setStatus("success")
         toast({
