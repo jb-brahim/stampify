@@ -14,8 +14,6 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Stamp } from "lucide-react"
 import { motion } from "framer-motion"
 import { pageTransition, modalContent } from "@/lib/animations"
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
-import { jwtDecode } from 'jwt-decode'
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -85,59 +83,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    try {
-      if (!credentialResponse.credential) {
-        throw new Error('No credential received')
-      }
-
-      // Decode the JWT token to get user info
-      const decoded: any = jwtDecode(credentialResponse.credential)
-
-      console.log('Google login successful:', decoded)
-
-      // Send to backend
-      const response = await authAPI.googleAuth(
-        decoded.sub, // Google ID
-        decoded.email,
-        decoded.name || decoded.email.split('@')[0]
-      )
-
-      const { token, businessOwner } = response.data.data
-
-      const user = {
-        id: businessOwner.id,
-        email: businessOwner.email,
-        businessName: businessOwner.businessName,
-        role: "business" as const
-      }
-
-      setAuth(user, token)
-
-      toast({
-        title: "Welcome!",
-        description: "You have successfully signed in with Google.",
-      })
-
-      router.push("/dashboard")
-    } catch (error: any) {
-      console.error('Google login error:', error)
-      toast({
-        title: "Google Sign-In failed",
-        description: error.response?.data?.message || "Unable to sign in with Google",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleGoogleError = () => {
-    toast({
-      title: "Google Sign-In failed",
-      description: "Unable to sign in with Google. Please try again.",
-      variant: "destructive",
-    })
-  }
-
   return (
     <motion.div
       className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12"
@@ -193,34 +138,6 @@ export default function LoginPage() {
                 </Button>
               </motion.div>
             </form>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-
-            <div className="w-full flex justify-center">
-              {typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  useOneTap
-                  theme="outline"
-                  size="large"
-                  text="signin_with"
-                  shape="rectangular"
-                />
-              )}
-              {(!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) && (
-                <p className="text-sm text-muted-foreground">
-                  Google Sign-In requires configuration
-                </p>
-              )}
-            </div>
 
             <div className="mt-4 text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
