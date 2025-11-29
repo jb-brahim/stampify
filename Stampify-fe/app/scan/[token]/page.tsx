@@ -24,7 +24,8 @@ export default function ScanTokenPage() {
         if (!email) {
           // No email found - redirect to registration with the QR token
           // The registration page will handle getting business info
-          router.push(`/register?qrToken=${params.token}`)
+          const token = Array.isArray(params.token) ? params.token[0] : params.token
+          router.push(`/register?qrToken=${token}`)
           return
         }
 

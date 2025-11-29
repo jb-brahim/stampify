@@ -52,24 +52,29 @@ function RegisterContent() {
         if (qrToken) {
             const fetchBusinessInfo = async () => {
                 try {
+                    console.log("Fetching business info for token:", qrToken)
                     // Use a dummy email to get business info from the scan endpoint
-                    // The backend returns isNewUser: true and the business info
                     const response = await customerAPI.scanQR(qrToken, "temp-registration@placeholder.com")
+                    console.log("Scan response:", response.data)
+
                     if (response.data.isNewUser && response.data.data.business) {
                         setBusinessInfo({
                             id: response.data.data.business.id,
                             name: response.data.data.business.name
                         })
+                    } else {
+                        console.error("Unexpected response format:", response.data)
+                        throw new Error("Invalid response format")
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.error("Failed to fetch business info:", error)
+                    console.log("Error response:", error.response?.data)
+
                     toast({
-                        title: "Error",
-                        description: "Failed to load business information. Please try scanning again.",
+                        title: "Error loading business info",
+                        description: error.response?.data?.message || "Please try scanning the QR code again",
                         variant: "destructive",
                     })
-                    // Delay redirect to let user see error
-                    setTimeout(() => router.push("/"), 3000)
                 }
             }
             fetchBusinessInfo()
