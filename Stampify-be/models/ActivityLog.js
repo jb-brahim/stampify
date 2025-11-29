@@ -10,7 +10,7 @@ const activityLogSchema = new mongoose.Schema({
     action: {
         type: String,
         required: true,
-        enum: ['STAMP_GIVEN', 'REWARD_REDEEMED', 'CARD_UPDATED', 'PROFILE_UPDATED', 'SUBSCRIPTION_UPDATED']
+        enum: ['STAMP_GIVEN', 'REWARD_REDEEMED', 'CARD_UPDATED', 'PROFILE_UPDATED', 'SUBSCRIPTION_UPDATED', 'REMINDER_SENT']
     },
     details: {
         type: mongoose.Schema.Types.Mixed,

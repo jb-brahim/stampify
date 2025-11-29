@@ -84,6 +84,8 @@ export const businessAPI = {
   getStats: () => api.get("/card/stats"),
   getCustomers: () => api.get("/business/customers"),
   getActivityLogs: (limit = 50) => api.get(`/business/activity?limit=${limit}`),
+  getAnalytics: () => api.get("/business/analytics"),
+  sendReminder: (customerId: string) => api.post(`/business/customers/${customerId}/remind`),
 }
 
 // Customer endpoints

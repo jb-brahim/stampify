@@ -60,6 +60,7 @@ const getCustomerCard = async (req, res) => {
  */
 const registerCustomer = async (req, res) => {
   try {
+    console.log('Register Body:', req.body);
     const { businessId, deviceId, name, email, phone } = req.body;
 
     if (!businessId || !deviceId || !name) {

@@ -16,6 +16,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Mail } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Customer {
     _id: string
@@ -30,6 +33,7 @@ interface Customer {
 
 export default function CustomersPage() {
     const router = useRouter()
+    const { toast } = useToast()
     const { user, isAuthenticated, _hasHydrated } = useAuthStore()
     const [customers, setCustomers] = useState<Customer[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -103,6 +107,7 @@ export default function CustomersPage() {
                                     <TableHead>Stamps</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Last Visit</TableHead>
+                                    <TableHead>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -132,6 +137,32 @@ export default function CustomersPage() {
                                                 {customer.lastStampTime
                                                     ? new Date(customer.lastStampTime).toLocaleDateString()
                                                     : "Never"}
+                                            </TableCell>
+                                            <TableCell>
+                                                {customer.email && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await businessAPI.sendReminder(customer._id)
+                                                                toast({
+                                                                    title: "Reminder sent!",
+                                                                    description: `Email sent to ${customer.email}`,
+                                                                })
+                                                            } catch (error: any) {
+                                                                toast({
+                                                                    title: "Failed to send",
+                                                                    description: error.response?.data?.message || "Error sending reminder",
+                                                                    variant: "destructive",
+                                                                })
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Mail className="mr-2 h-4 w-4" />
+                                                        Remind
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))

@@ -54,6 +54,56 @@ const sendRewardEmail = async (customerEmail, customerName, businessName, reward
     }
 };
 
+/**
+ * Send reminder email to customer
+ */
+const sendReminderEmail = async (customerEmail, customerName, businessName) => {
+    try {
+        if (process.env.NODE_ENV === 'production' && process.env.SMTP_HOST) {
+            const transporter = nodemailer.createTransporter({
+                host: process.env.SMTP_HOST,
+                port: process.env.SMTP_PORT || 587,
+                secure: false,
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                }
+            });
+
+            const mailOptions = {
+                from: process.env.SMTP_FROM || 'noreply@stampify.com',
+                to: customerEmail,
+                subject: `${businessName} misses you!`,
+                html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #4F46E5;">We miss you${customerName ? ', ' + customerName : ''}!</h1>
+            <p style="font-size: 16px;">It's been a while since we last saw you at <strong>${businessName}</strong>.</p>
+            <p>Come back soon to collect more stamps and earn rewards!</p>
+            <div style="margin: 30px 0;">
+              <a href="https://stampify-seven.vercel.app/cards" style="background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View My Stamp Card</a>
+            </div>
+            <p style="color: #6B7280; font-size: 14px;">Hope to see you soon!</p>
+          </div>
+        `
+            };
+
+            await transporter.sendMail(mailOptions);
+            console.log(`Reminder email sent to ${customerEmail}`);
+        } else {
+            console.log('=== REMINDER EMAIL (DEV MODE) ===');
+            console.log(`To: ${customerEmail}`);
+            console.log(`Subject: ${businessName} misses you!`);
+            console.log('==================================');
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Error sending reminder email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
-    sendRewardEmail
+    sendRewardEmail,
+    sendReminderEmail
 };

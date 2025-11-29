@@ -4,12 +4,12 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuthStore } from "@/store/auth-store"
-import { useBusinessStore } from "@/store/business-store"
 import { businessAPI } from "@/services/api"
 import { Users, Gift, StampIcon, TrendingUp } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { motion } from "framer-motion"
 import { staggerContainer, fadeInUp, counterVariants, pageTransition } from "@/lib/animations"
+import { OverviewCharts } from "@/components/analytics/overview-charts"
 
 function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0)
@@ -38,7 +38,7 @@ function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: nu
 export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated, _hasHydrated } = useAuthStore()
-  const { stats, setStats } = useBusinessStore()
+  const [analytics, setAnalytics] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -52,55 +52,56 @@ export default function DashboardPage() {
 
     const loadStats = async () => {
       try {
-        const response = await businessAPI.getStats()
-        setStats(response.data.data)
+        const response = await businessAPI.getAnalytics()
+        setAnalytics(response.data.data)
       } catch (error) {
-        console.error("Failed to load stats:", error)
+        console.error("Failed to load analytics:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
     loadStats()
-  }, [_hasHydrated, isAuthenticated, user, router, setStats])
+  }, [_hasHydrated, isAuthenticated, user, router])
 
   if (isLoading || !_hasHydrated) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Skeleton className="mb-8 h-10 w-64" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
+        <Skeleton className="h-[400px] w-full" />
       </div>
     )
   }
 
   const statsCards = [
     {
-      title: "Total Customers",
-      value: stats?.totalCustomers || 0,
-      icon: Users,
-      description: "Active loyalty members",
-    },
-    {
-      title: "Stamps Given",
-      value: stats?.totalStampsGiven || 0,
+      title: "Total Stamps (30d)",
+      value: analytics?.metrics?.totalStamps || 0,
       icon: StampIcon,
-      description: "Total stamps collected",
+      description: "Stamps given in last 30 days",
     },
     {
-      title: "Rewards Redeemed",
-      value: stats?.totalRewardsRedeemed || 0,
+      title: "New Customers (30d)",
+      value: analytics?.metrics?.newCustomers || 0,
+      icon: Users,
+      description: "New loyalty members joined",
+    },
+    {
+      title: "Rewards Redeemed (30d)",
+      value: analytics?.metrics?.rewardsRedeemed || 0,
       icon: Gift,
-      description: "Completed cards",
+      description: "Rewards claimed by customers",
     },
     {
-      title: "Engagement",
-      value: stats?.totalCustomers ? Math.round((stats.totalRewardsRedeemed / stats.totalCustomers) * 100) : 0,
+      title: "Engagement Rate",
+      value: analytics?.metrics?.newCustomers ? Math.round((analytics.metrics.rewardsRedeemed / analytics.metrics.newCustomers) * 100) : 0,
       icon: TrendingUp,
-      description: "Reward completion rate",
+      description: "Reward redemption rate",
       suffix: "%",
     },
   ]
@@ -139,47 +140,12 @@ export default function DashboardPage() {
         ))}
       </motion.div>
 
-      {/* Recent Activity */}
-      <motion.div variants={fadeInUp}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-              <motion.div className="space-y-4" variants={staggerContainer} initial="initial" animate="animate">
-                {stats.recentActivity.map((activity, i) => (
-                  <motion.div
-                    key={activity.id}
-                    variants={fadeInUp}
-                    className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        {activity.type === "stamp" ? (
-                          <StampIcon className="h-5 w-5 text-primary" />
-                        ) : (
-                          <Gift className="h-5 w-5 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {activity.type === "stamp" ? "Stamp collected" : "Reward redeemed"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{activity.customerEmail}</p>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(activity.timestamp).toLocaleDateString()}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              <div className="py-8 text-center text-muted-foreground">No recent activity yet</div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Analytics Charts */}
+      <motion.div variants={fadeInUp} className="mb-8">
+        <OverviewCharts
+          activityData={analytics?.activity || []}
+          peakHoursData={analytics?.peakHours || []}
+        />
       </motion.div>
     </motion.div>
   )
