@@ -203,17 +203,23 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="w-full">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-                theme="outline"
-                size="large"
-                text="signin_with"
-                shape="rectangular"
-                width="100%"
-              />
+            <div className="w-full flex justify-center">
+              {typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                />
+              )}
+              {(!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) && (
+                <p className="text-sm text-muted-foreground">
+                  Google Sign-In requires configuration
+                </p>
+              )}
             </div>
 
             <div className="mt-4 text-center text-sm">
