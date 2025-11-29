@@ -22,27 +22,39 @@ export default function ScanTokenPage() {
         let email = localStorage.getItem("stampify-customer-email")
 
         if (!email) {
-          // No email found, need to register first
-          // Try to get from scan response
-          const response = await customerAPI.scanQR(params.token as string, "temp@temp.com")
+          // No email found - this is a new user, redirect to get business info first
+          try {
+            // Make a dummy scan to get business info
+            const response = await customerAPI.scanQR(params.token as string, "new-user@placeholder.com")
 
-          if (response.data.isNewUser) {
-            const business = response.data.data.business
-            const searchParams = new URLSearchParams({
-              businessId: business.id,
-              businessName: business.name,
+            if (response.data.isNewUser) {
+              const business = response.data.data.business
+              const searchParams = new URLSearchParams({
+                businessId: business.id,
+                businessName: business.name,
+              })
+              router.push(`/register?${searchParams.toString()}`)
+              return
+            }
+          } catch (error: any) {
+            // If the scan fails, try to extract business info from error or redirect to registration
+            toast({
+              title: "Registration required",
+              description: "Please register to collect stamps",
+              variant: "destructive",
             })
-            router.push(`/register?${searchParams.toString()}`)
+            setTimeout(() => router.push("/"), 2000)
             return
           }
         }
 
-        const response = await customerAPI.scanQR(params.token as string, email!)
+        // Email exists, proceed with normal scan
+        const response = await customerAPI.scanQR(params.token as string, email)
 
         addCard(response.data.data)
 
         // Play success sound
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHgU2jdXvz3kpBSh+zPDajzsKElyx6OyrWBQLSKDf8sFuJAUuhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw')
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHgU2jdXvz3kpBSh+zPDajzsKElyx6OyrWBQLSKDf8sFuJAUuhM/z1YU1Bxdmvue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw')
         audio.play().catch(e => console.log('Audio play failed:', e))
 
         setStatus("success")
