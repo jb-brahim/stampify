@@ -41,6 +41,10 @@ export default function ScanTokenPage() {
 
         addCard(response.data.data)
 
+        // Play success sound
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHgU2jdXvz3kpBSh+zPDajzsKElyx6OyrWBQLSKDf8sFuJAUuhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw2o87ChJcr+jrq1kVDEig3/LBbiQFL4TP89WFNQcXZrnt6qRSEQtLpuDxuWUdBTaN1e/PgCoFKX/M8NqPOwsSXK/o66tZFQxIoN/ywW4kBS+Ez/PVhTUHF2a57eqkUhELS6bg8bllHQU2jdXvz4AqBSl/zPDajzsKElyu6OurWRUMSKDf8sFuJAUvhM/z1YU1Bxdmue3qpFIRC0um4PG5ZR0FNo3V78+AKgUpf8zw')
+        audio.play().catch(e => console.log('Audio play failed:', e))
+
         setStatus("success")
         toast({
           title: "Stamp collected!",
