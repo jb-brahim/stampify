@@ -1,4 +1,5 @@
 const BusinessOwner = require('../models/BusinessOwner');
+const ActivityLog = require('../models/ActivityLog');
 
 /**
  * Get current business owner's stamp card settings
@@ -73,6 +74,20 @@ const updateCard = async (req, res) => {
       });
     }
 
+    // Log activity
+    try {
+      await ActivityLog.create({
+        businessId: businessOwner._id,
+        action: 'CARD_UPDATED',
+        details: {
+          totalStamps,
+          rewardText
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+    }
+
     res.json({
       success: true,
       message: 'Stamp card updated successfully',
@@ -128,4 +143,3 @@ module.exports = {
   updateCard,
   getMyStats
 };
-

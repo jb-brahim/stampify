@@ -132,8 +132,36 @@ export default function QRCodePage() {
       }
     }
 
+    // Poll for QR token updates
+    const pollInterval = setInterval(async () => {
+      if (!isAuthenticated || user?.role !== "business") return
+
+      try {
+        const response = await businessAPI.getCard()
+        const newToken = response.data.data.qrToken
+
+        if (newToken && newToken !== stampCard?.qrToken) {
+          console.log('New QR token detected:', newToken)
+          setStampCard({
+            ...stampCard!,
+            qrToken: newToken
+          })
+          setQrDataUrl("") // Clear current QR to trigger regeneration
+
+          toast({
+            title: "QR Code Refreshed",
+            description: "The QR code has been updated for security",
+          })
+        }
+      } catch (error) {
+        console.error("Error polling for QR token:", error)
+      }
+    }, 5000)
+
     generateQR()
-  }, [stampCard?.qrToken, isLoading, qrDataUrl, toast])
+
+    return () => clearInterval(pollInterval)
+  }, [stampCard?.qrToken, isLoading, qrDataUrl, toast, isAuthenticated, user, setStampCard])
 
   const handleDownload = () => {
     if (qrDataUrl) {

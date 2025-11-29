@@ -1,5 +1,6 @@
 const BusinessOwner = require('../models/BusinessOwner');
 const Customer = require('../models/Customer');
+const ActivityLog = require('../models/ActivityLog');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -102,14 +103,63 @@ const scanQR = async (req, res) => {
     customer.stamps += 1;
     customer.lastStampTime = now;
 
+    // Regenerate QR token for dynamic QR code
+    const newQrToken = uuidv4();
+    businessOwner.qrToken = newQrToken;
+    await businessOwner.save();
+
+    // Log activity
+    try {
+      await ActivityLog.create({
+        businessId: businessOwner._id,
+        action: 'STAMP_GIVEN',
+        details: {
+          customerId: customer._id,
+          customerName: customer.name || 'Unknown',
+          stamps: customer.stamps
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+    }
+
     // Check if card is now full
     if (customer.stamps >= businessOwner.stampCard.totalStamps) {
       customer.rewardAchieved = true;
+
+      // Send reward email
+      const { sendRewardEmail } = require('../services/emailService');
+      await sendRewardEmail(
+        customer.email,
+        customer.name,
+        businessOwner.businessName,
+        businessOwner.stampCard.rewardText
+      );
+
+      // Reset stamps for next card
+      customer.stamps = 0;
+      customer.rewardAchieved = false;
+
       await customer.save();
+
+      // Log reward redemption
+      try {
+        await ActivityLog.create({
+          businessId: businessOwner._id,
+          action: 'REWARD_REDEEMED',
+          details: {
+            customerId: customer._id,
+            customerName: customer.name || 'Unknown',
+            rewardText: businessOwner.stampCard.rewardText
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log reward redemption:', logError);
+      }
 
       return res.json({
         success: true,
-        message: `Congratulations! You've earned: ${businessOwner.stampCard.rewardText}`,
+        message: `Congratulations! You've earned: ${businessOwner.stampCard.rewardText}. Check your email for details!`,
         data: {
           customerId: customer._id,
           stamps: customer.stamps,
@@ -117,6 +167,7 @@ const scanQR = async (req, res) => {
           rewardAchieved: true,
           rewardText: businessOwner.stampCard.rewardText,
           progress: 100,
+          cardReset: true,
           business: {
             id: businessOwner._id,
             name: businessOwner.businessName,

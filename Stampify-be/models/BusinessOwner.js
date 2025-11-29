@@ -13,8 +13,15 @@ const businessOwnerSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function () {
+      return !this.googleId; // Password required only if not using Google
+    },
     minlength: [6, 'Password must be at least 6 characters']
+  },
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
   },
   businessName: {
     type: String,
@@ -52,11 +59,11 @@ const businessOwnerSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-businessOwnerSchema.pre('save', async function(next) {
+businessOwnerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -67,7 +74,7 @@ businessOwnerSchema.pre('save', async function(next) {
 });
 
 // Method to compare passwords
-businessOwnerSchema.methods.comparePassword = async function(candidatePassword) {
+businessOwnerSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

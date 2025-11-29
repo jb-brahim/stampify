@@ -9,9 +9,20 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthStore } from "@/store/auth-store"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { User, LogOut } from "lucide-react"
+import { ProfileDialog } from "@/components/profile-dialog"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const pathname = usePathname()
   const { isAuthenticated, user, logout } = useAuthStore()
 
@@ -102,6 +113,15 @@ export function Navbar() {
                     QR Code
                   </Link>
                   <Link
+                    href="/dashboard/activity"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      isActive("/dashboard/activity") ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    Activity
+                  </Link>
+                  <Link
                     href="/dashboard/redemptions"
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary",
@@ -110,17 +130,26 @@ export function Navbar() {
                   >
                     Redemptions
                   </Link>
+                  <Link
+                    href="/dashboard/customers"
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      isActive("/dashboard/customers") ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    Customers
+                  </Link>
                 </>
               ) : user?.role === "admin" ? (
                 <>
                   <Link
-                    href="/admin"
+                    href="/admin/dashboard"
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary",
-                      isActive("/admin") ? "text-foreground" : "text-muted-foreground",
+                      isActive("/admin/dashboard") ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
-                    Admin
+                    Dashboard
                   </Link>
                   <Link
                     href="/admin/businesses"
@@ -155,9 +184,29 @@ export function Navbar() {
                 </>
               )}
               <ThemeToggle />
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Logout
-              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">User menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsProfileOpen(true)}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <ProfileDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} />
             </>
           )}
         </div>
@@ -219,17 +268,26 @@ export function Navbar() {
                       <Link href="/dashboard/qr" onClick={toggleMenu} className="text-sm font-medium">
                         QR Code
                       </Link>
+                      <Link href="/dashboard/activity" onClick={toggleMenu} className="text-sm font-medium">
+                        Activity
+                      </Link>
                       <Link href="/dashboard/redemptions" onClick={toggleMenu} className="text-sm font-medium">
                         Redemptions
+                      </Link>
+                      <Link href="/dashboard/customers" onClick={toggleMenu} className="text-sm font-medium">
+                        Customers
                       </Link>
                     </>
                   ) : user?.role === "admin" ? (
                     <>
-                      <Link href="/admin" onClick={toggleMenu} className="text-sm font-medium">
-                        Admin
+                      <Link href="/admin/dashboard" onClick={toggleMenu} className="text-sm font-medium">
+                        Dashboard
                       </Link>
                       <Link href="/admin/businesses" onClick={toggleMenu} className="text-sm font-medium">
                         Businesses
+                      </Link>
+                      <Link href="/admin/users" onClick={toggleMenu} className="text-sm font-medium">
+                        Users
                       </Link>
                     </>
                   ) : (

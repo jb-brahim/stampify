@@ -71,6 +71,7 @@ export const authAPI = {
   login: (email: string, password: string) => api.post("/auth/login", { email, password }),
   signup: (email: string, password: string, businessName?: string) =>
     api.post("/auth/signup", { email, password, businessName }),
+  updateProfile: (businessName: string) => api.put("/auth/profile", { businessName }),
 }
 
 // Business endpoints
@@ -79,6 +80,8 @@ export const businessAPI = {
   updateCard: (totalStamps: number, rewardText: string) => api.put("/card/update", { totalStamps, rewardText }),
   getQR: () => api.get("/qr/my"),
   getStats: () => api.get("/card/stats"),
+  getCustomers: () => api.get("/business/customers"),
+  getActivityLogs: (limit = 50) => api.get(`/business/activity?limit=${limit}`),
 }
 
 // Customer endpoints
