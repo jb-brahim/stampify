@@ -72,6 +72,8 @@ export const authAPI = {
   signup: (email: string, password: string, businessName?: string) =>
     api.post("/auth/signup", { email, password, businessName }),
   updateProfile: (businessName: string) => api.put("/auth/profile", { businessName }),
+  googleAuth: (googleId: string, email: string, businessName?: string) =>
+    api.post("/auth/google", { googleId, email, businessName }),
 }
 
 // Business endpoints

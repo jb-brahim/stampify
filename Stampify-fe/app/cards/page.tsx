@@ -1,133 +1,121 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useCustomerStore } from "@/store/customer-store"
-import { StampCard } from "@/components/stamp-card"
-import { Loader2, QrCode, Package } from "lucide-react"
-import { motion } from "framer-motion"
-import { staggerContainer, fadeInUp, pageTransition } from "@/lib/animations"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { Stamp, Gift } from "lucide-react"
 
-export default function CardsPage() {
-  const { cards, requestRedemption, refreshCards } = useCustomerStore()
+interface StampCard {
+  businessId: string
+  businessName: string
+  stamps: number
+  totalStamps: number
+  rewardText: string
+  rewardAchieved: boolean
+  lastStampTime: string
+}
+
+export default function MyCardsPage() {
+  const [cards, setCards] = useState<StampCard[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Wait for client-side hydration to complete
-    setMounted(true)
+    // Get device ID from localStorage
+    const deviceId = localStorage.getItem('deviceId') || ''
 
-    // Refresh cards from backend
-    refreshCards().finally(() => {
-      setIsLoading(false)
-    })
-  }, [refreshCards])
+    // In a real implementation, this would fetch cards from backend
+    // For now, we'll show cards stored in localStorage
+    const storedCards = localStorage.getItem(`stampCards_${deviceId}`)
+    if (storedCards) {
+      try {
+        setCards(JSON.parse(storedCards))
+      } catch (error) {
+        console.error('Error loading cards:', error)
+      }
+    }
+    setIsLoading(false)
+  }, [])
 
-  if (isLoading || !mounted) {
+  if (isLoading) {
     return (
       <div className="container mx-auto flex min-h-[50vh] items-center justify-center px-4 py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p>Loading your cards...</p>
       </div>
     )
   }
 
   return (
-    <motion.div
-      className="container mx-auto px-4 py-8 pb-24 md:pb-8"
-      variants={pageTransition}
-      initial="initial"
-      animate="animate"
-    >
-      <motion.div className="mb-8 flex items-center justify-between" variants={fadeInUp}>
-        <div>
-          <h1 className="text-3xl font-bold">My Stamp Cards</h1>
-          <p className="text-muted-foreground">Track your loyalty rewards</p>
-        </div>
-        <Link href="/scan" className="hidden md:block">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button className="gap-2">
-              <QrCode className="h-4 w-4" />
-              Scan QR Code
-            </Button>
-          </motion.div>
-        </Link>
-      </motion.div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">My Stamp Cards</h1>
+        <p className="text-muted-foreground">View all your loyalty cards in one place</p>
+      </div>
 
-      {cards.length > 0 ? (
-        <motion.div
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-        >
-          {cards
-            .filter((card) => card.business && card.business.id) // Filter out legacy/invalid cards
-            .map((card, i) => (
-              <motion.div key={card.business.id} variants={fadeInUp}>
-                <StampCard
-                  currentStamps={card.stamps}
-                  totalStamps={card.totalStamps}
-                  businessName={card.business.name}
-                  rewardText={card.rewardText}
-                  onRedeem={() => {
-                    requestRedemption(card.business.id)
-                      .then(() => {
-                        // Success handled by store update
-                      })
-                      .catch((err) => {
-                        // Error handled by store
-                      })
-                  }}
-                  redemptionStatus={
-                    card.redemptionRequests?.find((r) => r.status === "pending") ? "pending" : null
-                  }
-                />
-              </motion.div>
-            ))}
-        </motion.div>
+      {cards.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Stamp className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No stamp cards yet</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Scan a QR code at participating businesses to start collecting stamps and earning rewards!
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <motion.div variants={fadeInUp}>
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <motion.div
-                className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted"
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 1 }}
-              >
-                <Package className="h-8 w-8 text-muted-foreground" />
-              </motion.div>
-              <h3 className="mb-2 text-lg font-semibold">No stamp cards yet</h3>
-              <p className="mb-6 text-center text-sm text-muted-foreground">
-                Start collecting stamps by scanning QR codes at participating businesses
-              </p>
-              <Link href="/scan">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button className="gap-2">
-                    <QrCode className="h-4 w-4" />
-                    Scan Your First Card
-                  </Button>
-                </motion.div>
-              </Link>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card, index) => {
+            const progress = (card.stamps / card.totalStamps) * 100
+
+            return (
+              <Card key={index} className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{card.businessName}</CardTitle>
+                    {card.rewardAchieved && (
+                      <Badge className="bg-green-500">
+                        <Gift className="h-3 w-3 mr-1" />
+                        Ready!
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Progress</span>
+                        <span className="text-sm text-muted-foreground">
+                          {card.stamps} / {card.totalStamps} stamps
+                        </span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+
+                    <div className="rounded-lg bg-muted p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Reward</p>
+                      <p className="text-sm font-medium">{card.rewardText}</p>
+                    </div>
+
+                    {card.lastStampTime && (
+                      <p className="text-xs text-muted-foreground">
+                        Last stamp: {new Date(card.lastStampTime).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
       )}
 
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-        <div className="container mx-auto flex items-center justify-around p-4">
-          <Link href="/cards" className="flex flex-col items-center gap-1 text-primary">
-            <Package className="h-5 w-5" />
-            <span className="text-xs font-medium">My Cards</span>
-          </Link>
-          <Link href="/scan" className="flex flex-col items-center gap-1">
-            <QrCode className="h-5 w-5" />
-            <span className="text-xs font-medium">Scan</span>
-          </Link>
-        </div>
+      <div className="mt-8 rounded-lg border border-dashed p-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          💡 <strong>Tip:</strong> Your stamp cards are stored on this device.
+          To view cards from other devices, you'll need to scan the QR codes again.
+        </p>
       </div>
-    </motion.div>
+    </div>
   )
 }
