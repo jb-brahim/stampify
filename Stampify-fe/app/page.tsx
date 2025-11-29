@@ -42,10 +42,11 @@ export default function HomePage() {
                 </Button>
               </motion.div>
             </Link>
-            <Link href="/demo">
+            <Link href="/cards">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button size="lg" variant="outline">
-                  View Demo
+                <Button size="lg" variant="outline" className="gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  My Cards
                 </Button>
               </motion.div>
             </Link>
