@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +10,7 @@ import { Stamp, Gift, RefreshCw } from "lucide-react"
 import { useCustomerStore } from "@/store/customer-store"
 
 export default function MyCardsPage() {
+  const router = useRouter()
   const { cards, refreshCards } = useCustomerStore()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -46,7 +48,7 @@ export default function MyCardsPage() {
             onClick={() => {
               // Open camera scanner
               if (typeof window !== 'undefined' && 'mediaDevices' in navigator) {
-                window.location.href = '/scan-qr'
+                router.push('/scan-qr')
               } else {
                 alert('Camera not available. Please scan a QR code manually.')
               }

@@ -13,6 +13,7 @@ export default function ScanQRPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [error, setError] = useState<string>("")
     const [scanning, setScanning] = useState(false)
+    const scanningRef = useRef(false)
     const streamRef = useRef<MediaStream | null>(null)
 
     useEffect(() => {
@@ -34,7 +35,8 @@ export default function ScanQRPage() {
                 videoRef.current.srcObject = stream
                 videoRef.current.play()
                 setScanning(true)
-                scanQRCode()
+                scanningRef.current = true
+                requestAnimationFrame(scanQRCode)
             }
         } catch (err) {
             console.error("Camera error:", err)
@@ -43,6 +45,8 @@ export default function ScanQRPage() {
     }
 
     const stopCamera = () => {
+        scanningRef.current = false
+        setScanning(false)
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop())
             streamRef.current = null
@@ -53,36 +57,33 @@ export default function ScanQRPage() {
         const video = videoRef.current
         const canvas = canvasRef.current
 
-        if (!video || !canvas || !scanning) return
+        if (!video || !canvas || !scanningRef.current) return
 
         const context = canvas.getContext("2d")
         if (!context) return
 
-        const scan = () => {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.height = video.videoHeight
-                canvas.width = video.videoWidth
-                context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.height = video.videoHeight
+            canvas.width = video.videoWidth
+            context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-                const code = jsQR(imageData.data, imageData.width, imageData.height)
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+            const code = jsQR(imageData.data, imageData.width, imageData.height)
 
-                if (code) {
-                    console.log("QR Code detected:", code.data)
-                    handleQRCodeDetected(code.data)
-                    return
-                }
-            }
-
-            if (scanning) {
-                requestAnimationFrame(scan)
+            if (code) {
+                console.log("QR Code detected:", code.data)
+                handleQRCodeDetected(code.data)
+                return
             }
         }
 
-        scan()
+        if (scanningRef.current) {
+            requestAnimationFrame(scanQRCode)
+        }
     }
 
     const handleQRCodeDetected = (data: string) => {
+        scanningRef.current = false
         setScanning(false)
         stopCamera()
 
@@ -96,7 +97,7 @@ export default function ScanQRPage() {
         } else {
             setError("Invalid QR code. Please scan a Stampify QR code.")
             setTimeout(() => {
-                setScanning(true)
+                setError("")
                 startCamera()
             }, 2000)
         }

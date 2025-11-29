@@ -34,6 +34,7 @@ export interface CustomerProgress {
     requestedAt: string
     redeemedAt?: string
   }[]
+  lastStampTime?: string
 }
 
 export interface BusinessStats {

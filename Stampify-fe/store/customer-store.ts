@@ -79,6 +79,7 @@ export const useCustomerStore = create<CustomerState>()(
                   rewardAchieved: response.data.data.customer.rewardAchieved,
                   totalStamps: response.data.data.business.totalStamps,
                   rewardText: response.data.data.business.rewardText,
+                  lastStampTime: response.data.data.customer.lastStampTime,
                 }
               } catch (error) {
                 console.error(`Failed to refresh card for ${card.business.name}:`, error)
