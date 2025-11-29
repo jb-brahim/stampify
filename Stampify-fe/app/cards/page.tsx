@@ -30,15 +30,32 @@ export default function MyCardsPage() {
           <h1 className="text-3xl font-bold">My Stamp Cards</h1>
           <p className="text-muted-foreground">View all your loyalty cards in one place</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => {
+              // Open camera scanner
+              if (typeof window !== 'undefined' && 'mediaDevices' in navigator) {
+                window.location.href = '/scan-qr'
+              } else {
+                alert('Camera not available. Please scan a QR code manually.')
+              }
+            }}
+          >
+            <Stamp className="h-4 w-4 mr-2" />
+            Scan Again
+          </Button>
+        </div>
       </div>
 
       {cards.length === 0 ? (
