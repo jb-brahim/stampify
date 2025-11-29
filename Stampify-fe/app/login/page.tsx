@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Stamp } from "lucide-react"
 import { motion } from "framer-motion"
 import { pageTransition, modalContent } from "@/lib/animations"
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
+import { jwtDecode } from 'jwt-decode'
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -29,8 +31,13 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(false)
 
+    console.log('Login attempt started:', { email, apiUrl: process.env.NEXT_PUBLIC_API_BASE_URL })
+
     try {
+      console.log('Calling authAPI.login...')
       const response = await authAPI.login(email, password)
+      console.log('Login response received:', response.data)
+
       // Backend returns: { success, message, data: { token, businessOwner } }
       const { token, businessOwner } = response.data.data
 
@@ -42,6 +49,7 @@ export default function LoginPage() {
         role: "business" as const
       }
 
+      console.log('Setting auth with user:', user)
       setAuth(user, token)
 
       toast({
@@ -49,12 +57,27 @@ export default function LoginPage() {
         description: "You have successfully logged in.",
       })
 
+      console.log('Redirecting to dashboard...')
       router.push("/dashboard")
     } catch (error: any) {
+      console.error('Login error:', error)
+      console.error('Error response:', error.response)
+      console.error('Error message:', error.message)
+
       setError(true)
+
+      let errorMessage = "Invalid credentials"
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = "Request timeout - backend server may be sleeping. Please try again."
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = "Network error - cannot reach backend server"
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+
       toast({
         title: "Login failed",
-        description: error.response?.data?.message || "Invalid credentials",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -62,26 +85,57 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
-      // Note: This requires Google OAuth setup
-      // For now, show a message that it needs configuration
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received')
+      }
+
+      // Decode the JWT token to get user info
+      const decoded: any = jwtDecode(credentialResponse.credential)
+
+      console.log('Google login successful:', decoded)
+
+      // Send to backend
+      const response = await authAPI.googleAuth(
+        decoded.sub, // Google ID
+        decoded.email,
+        decoded.name || decoded.email.split('@')[0]
+      )
+
+      const { token, businessOwner } = response.data.data
+
+      const user = {
+        id: businessOwner.id,
+        email: businessOwner.email,
+        businessName: businessOwner.businessName,
+        role: "business" as const
+      }
+
+      setAuth(user, token)
+
       toast({
-        title: "Google Sign-In",
-        description: "Google OAuth requires configuration. Please set up Google Cloud credentials.",
-        variant: "default",
+        title: "Welcome!",
+        description: "You have successfully signed in with Google.",
       })
 
-      // Actual implementation would use Google OAuth library
-      // Example: const googleUser = await signInWithGoogle()
-      // Then send to backend: await authAPI.googleAuth(googleUser.id, googleUser.email, googleUser.name)
-    } catch (error) {
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error('Google login error:', error)
       toast({
         title: "Google Sign-In failed",
-        description: "Unable to sign in with Google",
+        description: error.response?.data?.message || "Unable to sign in with Google",
         variant: "destructive",
       })
     }
+  }
+
+  const handleGoogleError = () => {
+    toast({
+      title: "Google Sign-In failed",
+      description: "Unable to sign in with Google. Please try again.",
+      variant: "destructive",
+    })
   }
 
   return (
@@ -149,32 +203,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleSignIn}
-            >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Sign in with Google
-            </Button>
+            <div className="w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
 
             <div className="mt-4 text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>

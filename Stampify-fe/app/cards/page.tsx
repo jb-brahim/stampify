@@ -21,20 +21,45 @@ export default function MyCardsPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Get device ID from localStorage
-    const deviceId = localStorage.getItem('deviceId') || ''
-
-    // In a real implementation, this would fetch cards from backend
-    // For now, we'll show cards stored in localStorage
-    const storedCards = localStorage.getItem(`stampCards_${deviceId}`)
-    if (storedCards) {
+    // Get cards from customer store (stored after scanning)
+    const loadCards = () => {
       try {
-        setCards(JSON.parse(storedCards))
+        // Get device ID
+        const deviceId = localStorage.getItem('stampify-device-id') || ''
+
+        // Get customer store data
+        const customerStoreData = localStorage.getItem('stampify-customer-store')
+        if (customerStoreData) {
+          const parsed = JSON.parse(customerStoreData)
+          const customerCards = parsed.state?.cards || []
+
+          // Convert to StampCard format
+          const formattedCards: StampCard[] = customerCards.map((card: any) => ({
+            businessId: card.business?.id || '',
+            businessName: card.business?.name || 'Unknown Business',
+            stamps: card.stamps || 0,
+            totalStamps: card.totalStamps || 10,
+            rewardText: card.business?.rewardText || 'Free Reward',
+            rewardAchieved: card.rewardAchieved || false,
+            lastStampTime: card.lastStampTime || new Date().toISOString()
+          }))
+
+          setCards(formattedCards)
+        }
       } catch (error) {
         console.error('Error loading cards:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
+
+    loadCards()
+
+    // Reload when storage changes (after scanning)
+    const handleStorageChange = () => loadCards()
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   if (isLoading) {
