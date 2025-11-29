@@ -22,30 +22,10 @@ export default function ScanTokenPage() {
         let email = localStorage.getItem("stampify-customer-email")
 
         if (!email) {
-          // No email found - this is a new user, redirect to get business info first
-          try {
-            // Make a dummy scan to get business info
-            const response = await customerAPI.scanQR(params.token as string, "new-user@placeholder.com")
-
-            if (response.data.isNewUser) {
-              const business = response.data.data.business
-              const searchParams = new URLSearchParams({
-                businessId: business.id,
-                businessName: business.name,
-              })
-              router.push(`/register?${searchParams.toString()}`)
-              return
-            }
-          } catch (error: any) {
-            // If the scan fails, try to extract business info from error or redirect to registration
-            toast({
-              title: "Registration required",
-              description: "Please register to collect stamps",
-              variant: "destructive",
-            })
-            setTimeout(() => router.push("/"), 2000)
-            return
-          }
+          // No email found - redirect to registration with the QR token
+          // The registration page will handle getting business info
+          router.push(`/register?qrToken=${params.token}`)
+          return
         }
 
         // Email exists, proceed with normal scan

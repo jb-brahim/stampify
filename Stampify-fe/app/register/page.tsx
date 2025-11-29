@@ -26,10 +26,11 @@ function RegisterContent() {
     const { toast } = useToast()
     const { addCard } = useCustomerStore()
     const [isLoading, setIsLoading] = useState(false)
+    const [businessInfo, setBusinessInfo] = useState<{ id: string, name: string } | null>(null)
 
-    const businessId = searchParams.get("businessId")
-    const businessName = searchParams.get("businessName")
-    const deviceId = searchParams.get("deviceId")
+    const businessIdParam = searchParams.get("businessId")
+    const businessNameParam = searchParams.get("businessName")
+    const qrToken = searchParams.get("qrToken")
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -41,23 +42,55 @@ function RegisterContent() {
     })
 
     useEffect(() => {
-        if (!businessId || !deviceId) {
+        // If we have businessId and businessName from URL, use them
+        if (businessIdParam && businessNameParam) {
+            setBusinessInfo({ id: businessIdParam, name: businessNameParam })
+            return
+        }
+
+        // If we have qrToken, fetch business info
+        if (qrToken) {
+            const fetchBusinessInfo = async () => {
+                try {
+                    // Use a dummy email to get business info from the scan endpoint
+                    // The backend returns isNewUser: true and the business info
+                    const response = await customerAPI.scanQR(qrToken, "temp-registration@placeholder.com")
+                    if (response.data.isNewUser && response.data.data.business) {
+                        setBusinessInfo({
+                            id: response.data.data.business.id,
+                            name: response.data.data.business.name
+                        })
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch business info:", error)
+                    toast({
+                        title: "Error",
+                        description: "Failed to load business information. Please try scanning again.",
+                        variant: "destructive",
+                    })
+                    // Delay redirect to let user see error
+                    setTimeout(() => router.push("/"), 3000)
+                }
+            }
+            fetchBusinessInfo()
+        } else if (!businessIdParam) {
+            // No business info and no QR token
             toast({
                 title: "Invalid registration link",
-                description: "Missing business or device information",
+                description: "Missing business information",
                 variant: "destructive",
             })
             router.push("/")
         }
-    }, [businessId, deviceId, router, toast])
+    }, [businessIdParam, businessNameParam, qrToken, router, toast])
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!businessId) return
+        if (!businessInfo?.id) return
 
         setIsLoading(true)
         try {
             const response = await customerAPI.register({
-                businessId,
+                businessId: businessInfo.id,
                 name: values.name,
                 email: values.email,
                 phone: values.phone || undefined,
@@ -85,13 +118,22 @@ function RegisterContent() {
         }
     }
 
-    if (!businessId) return null
+    if (!businessInfo) {
+        return (
+            <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading business information...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle>Join {businessName}</CardTitle>
+                    <CardTitle>Join {businessInfo.name}</CardTitle>
                     <CardDescription>Register to collect your first stamp</CardDescription>
                 </CardHeader>
                 <CardContent>
