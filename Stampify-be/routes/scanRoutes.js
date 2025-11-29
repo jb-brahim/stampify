@@ -7,11 +7,12 @@ const validate = require('../middleware/validation');
 
 // Validation for scan endpoint
 const scanValidation = [
-  body('deviceId')
+  body('email')
     .notEmpty()
-    .withMessage('Device ID is required')
-    .isLength({ min: 1, max: 200 })
-    .withMessage('Device ID must be between 1 and 200 characters')
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Invalid email address')
+    .normalizeEmail()
 ];
 
 // Public endpoint - no auth required
