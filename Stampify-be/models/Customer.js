@@ -19,6 +19,7 @@ const customerSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    required: [true, 'Email is required'],
     trim: true,
     lowercase: true
   },
@@ -57,8 +58,8 @@ const customerSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure one customer per business per device
-customerSchema.index({ businessId: 1, deviceId: 1 }, { unique: true });
+// Compound index to ensure one customer per business per email
+customerSchema.index({ businessId: 1, email: 1 }, { unique: true });
 
 module.exports = mongoose.model('Customer', customerSchema);
 

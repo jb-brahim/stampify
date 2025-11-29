@@ -18,26 +18,26 @@ export default function ScanTokenPage() {
   useEffect(() => {
     const processStamp = async () => {
       try {
-        // Get or generate device ID
-        let deviceId = localStorage.getItem("stampify-device-id")
-        if (!deviceId) {
-          deviceId = `device-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
-          localStorage.setItem("stampify-device-id", deviceId)
+        // Get email from localStorage
+        let email = localStorage.getItem("stampify-customer-email")
+
+        if (!email) {
+          // No email found, need to register first
+          // Try to get from scan response
+          const response = await customerAPI.scanQR(params.token as string, "temp@temp.com")
+
+          if (response.data.isNewUser) {
+            const business = response.data.data.business
+            const searchParams = new URLSearchParams({
+              businessId: business.id,
+              businessName: business.name,
+            })
+            router.push(`/register?${searchParams.toString()}`)
+            return
+          }
         }
 
-        const response = await customerAPI.scanQR(params.token as string, deviceId)
-
-        if (response.data.isNewUser) {
-          // Redirect to registration
-          const business = response.data.data.business
-          const searchParams = new URLSearchParams({
-            businessId: business.id,
-            businessName: business.name,
-            deviceId: deviceId
-          })
-          router.push(`/register?${searchParams.toString()}`)
-          return
-        }
+        const response = await customerAPI.scanQR(params.token as string, email!)
 
         addCard(response.data.data)
 

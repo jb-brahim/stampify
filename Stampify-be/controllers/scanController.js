@@ -10,13 +10,13 @@ const { v4: uuidv4 } = require('uuid');
 const scanQR = async (req, res) => {
   try {
     const { qrToken } = req.params;
-    const { deviceId } = req.body;
+    const { email } = req.body;
 
-    // Validate deviceId is provided
-    if (!deviceId) {
+    // Validate email is provided
+    if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Device ID is required'
+        message: 'Email is required'
       });
     }
 
@@ -40,7 +40,7 @@ const scanQR = async (req, res) => {
     // Find or create customer
     let customer = await Customer.findOne({
       businessId: businessOwner._id,
-      deviceId: deviceId
+      email: email.toLowerCase().trim()
     });
 
     const now = new Date();

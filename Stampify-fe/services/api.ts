@@ -91,8 +91,8 @@ export const businessAPI = {
 // Customer endpoints
 export const customerAPI = {
   getCustomerCard: (customerId: string) => api.get(`/customer/${customerId}`),
-  scanQR: (qrToken: string, deviceId: string) => api.post(`/scan/${qrToken}`, { deviceId }),
-  register: (data: { businessId: string; deviceId: string; name: string; email?: string; phone?: string }) =>
+  scanQR: (qrToken: string, email: string) => api.post(`/scan/${qrToken}`, { email }),
+  register: (data: { businessId: string; name: string; email: string; phone?: string }) =>
     api.post("/customer/register", data),
 }
 

@@ -61,12 +61,12 @@ const getCustomerCard = async (req, res) => {
 const registerCustomer = async (req, res) => {
   try {
     console.log('Register Body:', req.body);
-    const { businessId, deviceId, name, email, phone } = req.body;
+    const { businessId, name, email, phone } = req.body;
 
-    if (!businessId || !deviceId || !name) {
+    if (!businessId || !name || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Business ID, Device ID, and Name are required'
+        message: 'Business ID, Name, and Email are required'
       });
     }
 
@@ -80,20 +80,22 @@ const registerCustomer = async (req, res) => {
     }
 
     // Check if customer already exists
-    let customer = await Customer.findOne({ businessId, deviceId });
+    let customer = await Customer.findOne({
+      businessId,
+      email: email.toLowerCase().trim()
+    });
     if (customer) {
       return res.status(400).json({
         success: false,
-        message: 'Customer already registered'
+        message: 'Customer already registered with this email'
       });
     }
 
     // Create new customer
     customer = new Customer({
       businessId,
-      deviceId,
       name,
-      email,
+      email: email.toLowerCase().trim(),
       phone,
       stamps: 1,
       lastStampTime: new Date()

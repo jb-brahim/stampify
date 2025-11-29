@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address").optional().or(z.literal("")),
+    email: z.string().email("Invalid email address").min(1, "Email is required"),
     phone: z.string().optional(),
 })
 
@@ -52,17 +52,19 @@ function RegisterContent() {
     }, [businessId, deviceId, router, toast])
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!businessId || !deviceId) return
+        if (!businessId) return
 
         setIsLoading(true)
         try {
             const response = await customerAPI.register({
                 businessId,
-                deviceId,
                 name: values.name,
-                email: values.email || undefined,
+                email: values.email,
                 phone: values.phone || undefined,
             })
+
+            // Store email in localStorage for future scans
+            localStorage.setItem("stampify-customer-email", values.email)
 
             addCard(response.data.data)
 
@@ -113,7 +115,7 @@ function RegisterContent() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Email (Optional)</FormLabel>
+                                        <FormLabel>Email</FormLabel>
                                         <FormControl>
                                             <Input placeholder="john@example.com" type="email" {...field} />
                                         </FormControl>
